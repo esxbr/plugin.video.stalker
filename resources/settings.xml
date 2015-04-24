@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-    <setting id="url" type="text" label="30000" />
+	<setting id="portal_name_1" type="text" label="30000" />
+    <setting id="portal_url_1" type="text" label="30001" />
+	<setting id="portal_name_2" type="text" label="30002" />
+    <setting id="portal_url_2" type="text" label="30003" />
+	<setting id="portal_name_3" type="text" label="30004" />
+    <setting id="portal_url_3" type="text" label="30005" />
 </settings>

@@ -64,20 +64,112 @@ def retrieveData(url, values ):
 	return info;
 
 
-def getAllChannels(url, path ):
+def getGenres(url, path):	
+	global key;
+	now = time();
+	portalurl = "_".join(re.findall("[a-zA-Z0-9]+", url));
+	portalurl = path + '/' + portalurl + '-genres';
+	
+	
+	if os.path.exists(portalurl):
+		#check last time
+		with open(portalurl) as data_file: data = json.load(data_file);
+	
+		time_init = float(data['time']);
+		
+	
+		# update 12h
+		if ((now - time_init) / 3600) < 12:
+			return data;
+	
+	handshake(url);
+	
+	info = retrieveData(url, values = {
+		'type' : 'itv', 
+		'action' : 'get_genres',
+		'JsHttpRequest' : '1-xml'})
+		
+	
+	results = info['js']
+	
+	data = '{ "time" : "' + str(now) + '", "genres" : [ \n'
+
+	for i in results:
+		alias 	= i["alias"]
+		id 		= i["id"]
+		title 	= i['title']
+		
+		data += '{"id":"'+ id +'", "alias":"'+ alias +'", "title":"'+ title +'"}, \n'
+
+	
+	data = data[:-3] + '\n]}'
+
+	with open(portalurl, 'w') as f: f.write(data.encode('utf-8'));
+	
+	return json.loads(data.encode('utf-8'));
+	
+def getVoD(url, path):	
+	global key;
+	now = time();
+	portalurl = "_".join(re.findall("[a-zA-Z0-9]+", url));
+	portalurl = path + '/' + portalurl + '-vod';
+	
+	
+	if os.path.exists(portalurl):
+		#check last time
+		with open(portalurl) as data_file: data = json.load(data_file);
+	
+		time_init = float(data['time']);
+		
+	
+		# update 12h
+		if ((now - time_init) / 3600) < 12:
+			return data;
+	
+	handshake(url);
+	
+	info = retrieveData(url, values = {
+		'type' : 'vod', 
+		'action' : 'get_ordered_list',
+		'JsHttpRequest' : '1-xml'})
+		
+	
+	results = info['js']['data']
+	
+	
+	data = '{ "time" : "' + str(now) + '", "vod" : [ \n'
+
+	for i in results:
+		name 	= i["name"]
+		cmd 	= i['cmd']
+		logo 	= i["screenshot_uri"]
+		
+		data += '{"name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'"}, \n'
+
+
+	data = data[:-3] + '\n]}'
+
+	with open(portalurl, 'w') as f: f.write(data.encode('utf-8'));
+	
+	return json.loads(data.encode('utf-8'));
+
+def getAllChannels(url, path):
 
 	now = time();
+	
+	portalurl = "_".join(re.findall("[a-zA-Z0-9]+", url));
+	portalurl = path + '/' + portalurl
+	
 
-	if os.path.exists(path + '/channels.json'):
+	if os.path.exists(portalurl):
 		#check last time
-		with open(path + '/channels.json') as data_file: data = json.load(data_file);
+		with open(portalurl) as data_file: data = json.load(data_file);
 	
 		time_init = float(data['time']);
 	
 		# update 12h
 		if ((now - time_init) / 3600) < 12:
 			return data;
-	
 	
 	handshake(url);
 	
@@ -87,8 +179,6 @@ def getAllChannels(url, path ):
 		'JsHttpRequest' : '1-xml'})
 	
 	results = info['js']['data']
-	
-	#print results;
 
 	data = '{ "time" : "' + str(now) + '", "channels" : [ \n'
 
@@ -98,13 +188,14 @@ def getAllChannels(url, path ):
 		cmd 	= i['cmd']
 		logo 	= i["logo"]
 		tmp 	= i["use_http_tmp_link"]
+		genre_id 	= i["tv_genre_id"];
 		
-		data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'"}, \n'
+		data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
 
 	
 	data = data[:-3] + '\n]}'
 
-	with open(path + '/channels.json', 'w') as f: f.write(data.encode('utf-8'));
+	with open(portalurl, 'w') as f: f.write(data.encode('utf-8'));
 	
 	return json.loads(data.encode('utf-8'));
 
@@ -153,6 +244,12 @@ def main(argv):
 
       if argv[0] == 'load':
       	getAllChannels(argv[1], argv[2]);
+      	
+      elif argv[0] == 'genres':
+      	getGenres(argv[1], argv[2]);
+      	
+      elif argv[0] == 'vod':
+      	getVoD(argv[1], argv[2]);
       	
       elif argv[0] == 'channel':
       	url = retriveUrl(argv[1], argv[2], argv[3]);

@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <strings>
-    <string id="30000">IPTV Url</string>
+    <string id="30000">Portal Name 1</string>
+    <string id="30001">Portal Url 1</string>
+    <string id="30002">Portal Name 2</string>
+    <string id="30003">Portal Url 2</string>
+    <string id="30004">Portal Name 3</string>
+    <string id="30005">Portal Url 3</string>
 </strings>
 
