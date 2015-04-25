@@ -27,8 +27,10 @@ mode = args.get('mode', None)
 
 portal_name_1 = args.get('portal_url_1', None)
 portal_url_1 = args.get('portal_url_1', None)
+
 portal_name_2 = args.get('portal_url_1', None)
 portal_url_2 = args.get('portal_url_1', None)
+
 portal_name_3 = args.get('portal_url_3', None)
 portal_url_3 = args.get('portal_url_3', None)
 
@@ -37,10 +39,13 @@ portal_url_3 = args.get('portal_url_3', None)
 if portal_url_1 is None:
 	parental = xbmcplugin.getSetting(int(sys.argv[1]), "parental");
 	password = xbmcplugin.getSetting(int(sys.argv[1]), "password");
+	
 	portal_name_1 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_1");
 	portal_url_1 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_1");
+	
 	portal_name_2 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_2");
 	portal_url_2 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_2");
+	
 	portal_name_3 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_3");
 	portal_url_3 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_3");
 else:
@@ -48,8 +53,10 @@ else:
 	password = password[0];
 	portal_name_1 = portal_name_1[0];
 	portal_url_1 = portal_url_1[0];
+	
 	portal_name_2 = portal_name_2[0];
 	portal_url_2 = portal_url_2[0];
+	
 	portal_name_3 = portal_name_3[0];
 	portal_url_3 = portal_url_3[0];
 	
@@ -63,9 +70,12 @@ def addPortal(portal_name, portal_url):
 			'stalker_url' : portal_url, 
 			'title' : portal_name
 			});
-		
-				
+			
+			
+		cmd = 'XBMC.RunPlugin(' + base_url + '?mode=cache&stalker_url=' + portal_url + ')';		
 		li = xbmcgui.ListItem(portal_name, iconImage='DefaultProgram.png')
+		li.addContextMenuItems([ ('Clear Cache', cmd) ]);
+
 		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True);
 	
 	
@@ -242,7 +252,12 @@ def playLevel():
 
 if mode is None:
 	homeLevel();
-		
+
+elif mode[0] == 'cache':	
+	stalker_url = args.get('stalker_url', None);
+	stalker_url = stalker_url[0];	
+	load_channels.clearCache(stalker_url, addondir);
+
 elif mode[0] == 'genres':
 	genreLevel();
 		

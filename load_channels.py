@@ -292,6 +292,15 @@ def retriveVoD(url, video):
 	url_base = url[: -(len(url) - url.rfind('/'))]
 	return url_base + '/' + data;
 
+def clearCache(url, path):
+	
+	portalurl = "_".join(re.findall("[a-zA-Z0-9]+", url));
+	
+	for root, dirs, files in os.walk(path):
+		for file in files:
+			if file.startswith(portalurl):
+				os.remove(root + '/' + file);
+	
 
 def main(argv):
 
@@ -312,6 +321,9 @@ def main(argv):
       	url = retriveVoD(argv[1], argv[2]);
       	print url
       	os.system('/Applications/VLC.app/Contents/MacOS/VLC ' + url)
+      	
+      elif argv[0] == 'cache':
+      	clearCache(argv[1], argv[2]);
 
 
 if __name__ == "__main__":

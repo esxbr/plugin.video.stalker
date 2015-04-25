@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <strings>
-    <string id="30000">Portal Name 1</string>
-    <string id="30001">Portal Url 1</string>
-    <string id="30002">Portal Name 2</string>
-    <string id="30003">Portal Url 2</string>
-    <string id="30004">Portal Name 3</string>
-    <string id="30005">Portal Url 3</string>
+    <string id="30000">Name</string>
+    <string id="30001">Url</string>
+    <string id="30002">Mac Address</string>
+    
+
     <string id="30006">Password</string>
     <string id="30007">Enable</string>
+    
     <string id="32001">Portal</string>
     <string id="32002">Parental</string>
+    
+    <string id="33001">Portal 1</string>
+    <string id="33002">Portal 2</string>
+    <string id="33003">Portal 3</string>
 </strings>
 
