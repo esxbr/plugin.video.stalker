@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-	<setting id="portal_name_1" type="text" label="30000" />
-    <setting id="portal_url_1" type="text" label="30001" />
-	<setting id="portal_name_2" type="text" label="30002" />
-    <setting id="portal_url_2" type="text" label="30003" />
-	<setting id="portal_name_3" type="text" label="30004" />
-    <setting id="portal_url_3" type="text" label="30005" />
+	<category label="32001">
+		<setting id="portal_name_1" type="text" label="30000" default="NFPS" />
+   	 	<setting id="portal_url_1" type="text" label="30001" default="http://portal.iptvprivateserver.tv" />
+		<setting id="portal_name_2" type="text" label="30002" />
+    	<setting id="portal_url_2" type="text" label="30003" />
+		<setting id="portal_name_3" type="text" label="30004" />
+    	<setting id="portal_url_3" type="text" label="30005" />
+    </category>
+    <category label="32002">
+    	<setting label="30007" type="bool" id="parental" default="true"/>
+    	<setting label="30006" type="text" id="password" option="hidden" default="0000"/>
+    </category>
 </settings>

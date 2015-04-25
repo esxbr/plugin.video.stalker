@@ -194,6 +194,26 @@ def getAllChannels(url, path):
 		
 		data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
 
+	# retrieve adults
+	info = retrieveData(url, values = {
+		'type' : 'itv', 
+		'action' : 'get_ordered_list',
+		'genre' : '10',
+		'JsHttpRequest' : '1-xml'})
+	
+	results = info['js']['data']
+
+	for i in results:
+		number 	= i["number"]
+		name 	= i["name"]
+		cmd 	= i['cmd']
+		logo 	= i["logo"]
+		tmp 	= i["use_http_tmp_link"]
+		genre_id 	= i["tv_genre_id"];
+		
+		data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
+
+
 	
 	data = data[:-3] + '\n]}'
 

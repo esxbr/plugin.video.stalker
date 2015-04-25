@@ -7,7 +7,7 @@ import xbmcaddon
 import xbmcgui
 import xbmcplugin
 import load_channels
-
+import hashlib
 
 addon       = xbmcaddon.Addon()
 addonname   = addon.getAddonInfo('name')
@@ -35,13 +35,17 @@ portal_url_3 = args.get('portal_url_3', None)
 #xbmcgui.Dialog().ok(addonname, 'aaa')
 
 if portal_url_1 is None:
-	portal_name_1 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_1")
-	portal_url_1 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_1")
-	portal_name_2 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_2")
-	portal_url_2 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_2")
-	portal_name_3 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_3")
-	portal_url_3 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_3")
+	parental = xbmcplugin.getSetting(int(sys.argv[1]), "parental");
+	password = xbmcplugin.getSetting(int(sys.argv[1]), "password");
+	portal_name_1 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_1");
+	portal_url_1 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_1");
+	portal_name_2 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_2");
+	portal_url_2 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_2");
+	portal_name_3 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_3");
+	portal_url_3 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_3");
 else:
+	parental = parental[0];
+	password = password[0];
 	portal_name_1 = portal_name_1[0];
 	portal_url_1 = portal_url_1[0];
 	portal_name_2 = portal_name_2[0];
@@ -61,25 +65,21 @@ def addPortal(portal_name, portal_url):
 			});
 		
 				
-		li = xbmcgui.ListItem(portal_name, iconImage='DefaultVideo.png')
+		li = xbmcgui.ListItem(portal_name, iconImage='DefaultProgram.png')
 		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True);
 	
 	
 def build_url(query):
 	return base_url + '?' + urllib.urlencode(query)
 
-if mode is None:
 
+def homeLevel():
 	addPortal(portal_name_1,portal_url_1);
 	addPortal(portal_name_2,portal_url_2);
 	addPortal(portal_name_3,portal_url_3);
-		
-		
-elif mode[0] == 'genres':
+	xbmcplugin.endOfDirectory(addon_handle);
 
-
-
-	
+def genreLevel():
 	stalker_url = args.get('stalker_url', None)
 	stalker_url = stalker_url[0];
 	
@@ -110,13 +110,18 @@ elif mode[0] == 'genres':
 			'genre_id': id, 
 			'genre_name': title.title()
 			});
-		li = xbmcgui.ListItem(title.title(), iconImage='DefaultVideo.png')
+			
+		if id == '10':
+			iconImage = 'OverlayLocked.png';
+		else:
+			iconImage = 'DefaultVideo.png';
+			
+		li = xbmcgui.ListItem(title.title(), iconImage=iconImage)
 		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True);
-		
-		
-elif mode[0] == 'vod':
 
+	xbmcplugin.endOfDirectory(addon_handle);
 
+def vodLevel():
 	stalker_url = args.get('stalker_url', None);
 	stalker_url = stalker_url[0];
 	
@@ -153,11 +158,12 @@ elif mode[0] == 'vod':
 		#li.setProperty('IsPlayable', 'true')
 
 		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
-
 	
-elif mode[0] == 'channels':
+	xbmcplugin.endOfDirectory(addon_handle);
 
-
+def channelLevel():
+	stop=False;
+	
 	stalker_url = args.get('stalker_url', None);
 	stalker_url = stalker_url[0];
 	
@@ -169,43 +175,52 @@ elif mode[0] == 'channels':
 	
 	genre_name 	= args.get('genre_name', None);
 	
+	
+	if genre_id_main == '10' and parental == 'true':
+		result = xbmcgui.Dialog().input('Parental', hashlib.md5(password.encode('utf-8')).hexdigest(), type=xbmcgui.INPUT_PASSWORD, option=xbmcgui.PASSWORD_VERIFY);
+		if result == '':
+			stop = True;
 
-	for i in data:
-		name 	= i["name"];
-		cmd 	= i["cmd"];
-		tmp 	= i["tmp"];
-		number 	= i["number"];
-		genre_id 	= i["genre_id"];
-		logo 	= i["logo"];
+	if stop == False:
+		for i in data:
+			name 	= i["name"];
+			cmd 	= i["cmd"];
+			tmp 	= i["tmp"];
+			number 	= i["number"];
+			genre_id 	= i["genre_id"];
+			logo 	= i["logo"];
 		
-		if genre_id_main == genre_id or genre_id_main == '*':
+			if genre_id_main == '*' and genre_id == '10':
+				continue;
 		
+			if genre_id_main == genre_id or genre_id_main == '*':
 		
-			if logo != '':
-				logo_url = stalker_url + '/stalker_portal/misc/logos/320/' + logo;
-			else:
-				logo_url = 'DefaultVideo.png';
+				if logo != '':
+					logo_url = stalker_url + '/stalker_portal/misc/logos/320/' + logo;
+				else:
+					logo_url = 'DefaultVideo.png';
 				
 				
-			url = build_url({
-				'mode': 'play', 
-				'stalker_url' : stalker_url, 
-				'cmd': cmd, 
-				'tmp' : tmp, 
-				'title' : name.encode("utf-8"),
-				'genre_name' : genre_name,
-				'logo_url' : logo_url
-				});
+				url = build_url({
+					'mode': 'play', 
+					'stalker_url' : stalker_url, 
+					'cmd': cmd, 
+					'tmp' : tmp, 
+					'title' : name.encode("utf-8"),
+					'genre_name' : genre_name,
+					'logo_url' : logo_url
+					});
 			
 
-			li = xbmcgui.ListItem(name, iconImage=logo_url, thumbnailImage=logo_url)
-			li.setInfo(type='Video', infoLabels={ "Title": name })
-			#li.setProperty('IsPlayable', 'true')
+				li = xbmcgui.ListItem(name, iconImage=logo_url, thumbnailImage=logo_url)
+				li.setInfo(type='Video', infoLabels={ "Title": name })
+				#li.setProperty('IsPlayable', 'true')
 
-			xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
+				xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
+				
+		xbmcplugin.endOfDirectory(addon_handle);
 
-elif mode[0] == 'play':
-
+def playLevel():
 	stalker_url = args.get('stalker_url', None)
 	stalker_url = stalker_url[0];
 	
@@ -225,8 +240,24 @@ elif mode[0] == 'play':
 	xbmc.Player().play(item=url, listitem=li);
 
 
+if mode is None:
+	homeLevel();
+		
+elif mode[0] == 'genres':
+	genreLevel();
+		
+elif mode[0] == 'vod':
+	vodLevel();
 
-xbmcplugin.endOfDirectory(addon_handle)
+	
+elif mode[0] == 'channels':
+	channelLevel();
+	
+elif mode[0] == 'play':
+	playLevel();
+
+
+
 
 
 	
