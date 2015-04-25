@@ -215,7 +215,10 @@ elif mode[0] == 'play':
 	genre_name 	= args['genre_name'][0];
 	logo_url 	= args['logo_url'][0];
 	
-	url = load_channels.retriveUrl(stalker_url, cmd, tmp);
+	if genre_name!='VoD':
+		url = load_channels.retriveUrl(stalker_url, cmd, tmp);
+	else:
+		url = load_channels.retriveVoD(stalker_url, cmd);
 	
 	li = xbmcgui.ListItem(title, iconImage=logo_url);
 	li.setInfo('video', {'Title': title, 'Genre': genre_name});

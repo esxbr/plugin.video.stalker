@@ -131,6 +131,8 @@ def getVoD(url, path):
 	info = retrieveData(url, values = {
 		'type' : 'vod', 
 		'action' : 'get_ordered_list',
+		'sortby' : 'added',
+		'not_ended' : '0',
 		'JsHttpRequest' : '1-xml'})
 		
 	
@@ -239,6 +241,37 @@ def retriveUrl(url, channel, tmp):
 		return url;
 
 
+def retriveVoD(url, video):
+	
+	s = video.split(' ');
+	url = s[0];
+	if len(s)>1:
+		url = s[1];
+
+	
+	url = url.replace('TOMTOM:', 'http://');
+	
+	#print url;
+
+	# RETRIEVE THE 1 EXTM3U
+	request = urllib2.Request(url)
+	response  = urllib2.urlopen(request);
+	url = response.geturl();
+
+
+	# RETRIEVE THE 1 EXTM3U
+	request = urllib2.Request(url)
+	#request.get_method = lambda : 'HEAD'
+	response  = urllib2.urlopen(request);
+	data = response.read().decode("utf-8");
+	data = data.splitlines();
+	data = data[len(data) - 1];
+	
+	# RETRIEVE THE 2 EXTM3U
+	url = response.geturl().split('?')[0];
+	url_base = url[: -(len(url) - url.rfind('/'))]
+	return url_base + '/' + data;
+
 
 def main(argv):
 
@@ -254,7 +287,12 @@ def main(argv):
       elif argv[0] == 'channel':
       	url = retriveUrl(argv[1], argv[2], argv[3]);
       	print url
-      	#os.system('/Applications/VLC.app/Contents/MacOS/VLC ' + url)
+	
+      elif argv[0] == 'vod_url':
+      	url = retriveVoD(argv[1], argv[2]);
+      	print url
+      	os.system('/Applications/VLC.app/Contents/MacOS/VLC ' + url)
+
 
 if __name__ == "__main__":
    main(sys.argv[1:])
