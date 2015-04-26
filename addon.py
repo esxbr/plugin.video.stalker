@@ -34,8 +34,6 @@ portal_url_2 = args.get('portal_url_1', None)
 portal_name_3 = args.get('portal_url_3', None)
 portal_url_3 = args.get('portal_url_3', None)
 
-#xbmcgui.Dialog().ok(addonname, 'aaa')
-
 if portal_url_1 is None:
 	parental = xbmcplugin.getSetting(int(sys.argv[1]), "parental");
 	password = xbmcplugin.getSetting(int(sys.argv[1]), "password");
@@ -93,7 +91,14 @@ def genreLevel():
 	stalker_url = args.get('stalker_url', None)
 	stalker_url = stalker_url[0];
 	
-	data = load_channels.getGenres(stalker_url, addondir);
+	try:
+		data = load_channels.getGenres(stalker_url, addondir);
+		
+	except:
+		xbmcgui.Dialog().notification(addonname, 'Server Offline', xbmcgui.NOTIFICATION_ERROR );
+		return;
+	
+	
 	data = data['genres'];
 	
 
@@ -136,8 +141,14 @@ def vodLevel():
 	stalker_url = args.get('stalker_url', None);
 	stalker_url = stalker_url[0];
 	
+	try:
+		data = load_channels.getVoD(stalker_url, addondir);
+		
+	except:
+		xbmcgui.Dialog().notification(addonname, 'Server Offline', xbmcgui.NOTIFICATION_ERROR );
+		return;
 	
-	data = load_channels.getVoD(stalker_url, addondir);
+	
 	data = data['vod'];
 	
 		
@@ -183,7 +194,14 @@ def channelLevel():
 	genre_id_main = args.get('genre_id', None);
 	genre_id_main = genre_id_main[0];
 	
-	data = load_channels.getAllChannels(stalker_url, addondir);
+	try:
+		data = load_channels.getAllChannels(stalker_url, addondir);
+		
+	except:
+		xbmcgui.Dialog().notification(addonname, 'Server Offline', xbmcgui.NOTIFICATION_ERROR );
+		return;
+	
+	
 	data = data['channels'];
 	
 	genre_name 	= args.get('genre_name', None);
@@ -203,7 +221,7 @@ def channelLevel():
 			genre_id 	= i["genre_id"];
 			logo 	= i["logo"];
 		
-			if genre_id_main == '*' and genre_id == '10':
+			if genre_id_main == '*' and genre_id == '10' and parental == 'true':
 				continue;
 		
 			if genre_id_main == genre_id or genre_id_main == '*':
@@ -226,17 +244,25 @@ def channelLevel():
 			
 
 				li = xbmcgui.ListItem(name, iconImage=logo_url, thumbnailImage=logo_url);
-				li.setInfo(type='Video', infoLabels={ "title": name });
+				li.setInfo(type='Video', infoLabels={ 
+					'title': name,
+					'count' : number
+					});
 
 				xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li);
 		
-		xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_UNSORTED);
+		xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_PLAYLIST_ORDER);
 		xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE);
+		xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_PROGRAM_COUNT);
 		
 		
 		xbmcplugin.endOfDirectory(addon_handle);
 
 def playLevel():
+	
+	dp = xbmcgui.DialogProgressBG();
+	dp.create('IPTV', 'Loading ...');
+
 	stalker_url = args.get('stalker_url', None)
 	stalker_url = stalker_url[0];
 	
@@ -246,15 +272,27 @@ def playLevel():
 	genre_name 	= args['genre_name'][0];
 	logo_url 	= args['logo_url'][0];
 	
-	if genre_name!='VoD':
-		url = load_channels.retriveUrl(stalker_url, cmd, tmp);
-	else:
-		url = load_channels.retriveVoD(stalker_url, cmd);
+	try:
+		if genre_name!='VoD':
+			url = load_channels.retriveUrl(stalker_url, cmd, tmp);
+		else:
+			url = load_channels.retriveVoD(stalker_url, cmd);
+	
+	except:
+		dp.close();
+		
+		xbmcgui.Dialog().notification(addonname, 'Channel Offline', xbmcgui.NOTIFICATION_INFO );
+		return;
+	
+	dp.update(80);
 	
 	li = xbmcgui.ListItem(title, iconImage=logo_url);
 	li.setInfo('video', {'Title': title, 'Genre': genre_name});
 	xbmc.Player().play(item=url, listitem=li);
-
+	
+	dp.update(100);
+	
+	dp.close();
 
 if mode is None:
 	homeLevel();

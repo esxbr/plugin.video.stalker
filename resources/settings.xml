@@ -16,7 +16,7 @@
     	
     </category>
     <category label="32002">
-    	<setting label="30007" type="bool" id="parental" default="true"/>
+    	<setting label="30007" type="bool" id="parental" default="false"/>
     	<setting label="30006" type="text" id="password" option="hidden" default="0000"/>
     </category>
 </settings>
