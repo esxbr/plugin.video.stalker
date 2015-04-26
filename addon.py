@@ -128,6 +128,7 @@ def genreLevel():
 			
 		li = xbmcgui.ListItem(title.title(), iconImage=iconImage)
 		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True);
+		
 
 	xbmcplugin.endOfDirectory(addon_handle);
 
@@ -169,6 +170,8 @@ def vodLevel():
 
 		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
 	
+	xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_UNSORTED);
+	xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE);
 	xbmcplugin.endOfDirectory(addon_handle);
 
 def channelLevel():
@@ -222,12 +225,15 @@ def channelLevel():
 					});
 			
 
-				li = xbmcgui.ListItem(name, iconImage=logo_url, thumbnailImage=logo_url)
-				li.setInfo(type='Video', infoLabels={ "Title": name })
-				#li.setProperty('IsPlayable', 'true')
+				li = xbmcgui.ListItem(name, iconImage=logo_url, thumbnailImage=logo_url);
+				li.setInfo(type='Video', infoLabels={ "title": name });
 
-				xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
-				
+				xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li);
+		
+		xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_UNSORTED);
+		xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE);
+		
+		
 		xbmcplugin.endOfDirectory(addon_handle);
 
 def playLevel():

@@ -7,8 +7,11 @@ import urlparse
 import re, uuid
 from time import time
 from datetime import datetime
+import math
 
-key=''
+key = ''
+mac = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
+
 
 def handshake(url):
 	global key;
@@ -20,14 +23,36 @@ def handshake(url):
 
 	key = info['js']['token']
 	
+	#getProfile(url);
+	
 	#print 'key: ' + key
+
+def getProfile(url):
+	global mac, key;
+		
+	sn = "".join(re.findall("[0-9]+", mac));
+	sn += sn + sn;
+	sn = sn[:13];
+
+	info = retrieveData(url, values = {
+		'type' : 'stb', 
+		'action' : 'get_profile',
+		'hd' : '1',
+		'ver' : 'ImageDescription:%200.2.18-r10-pub-250;%20ImageDate:%2014%20Jan%202015%2013:18:32%20GMT%200200;%20PORTAL%20version:%20Latest;%20API%20Version:%20JS%20API%20version:%20328;%20STB%20API%20version:%20134;%20Player%20Engine%20version:%200x560',
+		'num_banks' : '1',
+		'sn' : sn,
+		'stb_type' : 'MAG250',
+		'image_version' : '218',
+		'auth_second_step' : '0',
+		'hw_version' : '1.7-BD-00',
+		'not_valid_token' : '0',
+		'JsHttpRequest' : '1-xml'})
 
 
 def retrieveData(url, values ):
-	global key;
+	global key, mac;
 	
-	mac = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
-
+	
 	url += '/stalker_portal'
 	load = '/server/load.php'
 	refer = '/c/'
@@ -40,7 +65,7 @@ def retrieveData(url, values ):
 		
 		headers 	= { 
 			'User-Agent' : user_agent, 
-			'Cookie' : 'mac=' + mac+ '; stb_lang=en; timezone=' + timezone,
+			'Cookie' : 'mac=' + mac.replace(':', '%3') + '; stb_lang=en; timezone=' + timezone,
 			'Referer' : url + refer,
 			'Accept' : '*/*',
 			'X-User-Agent' : 'Model: MAG250; Link: WiFi',
@@ -128,26 +153,40 @@ def getVoD(url, path):
 	
 	handshake(url);
 	
-	info = retrieveData(url, values = {
-		'type' : 'vod', 
-		'action' : 'get_ordered_list',
-		'sortby' : 'added',
-		'not_ended' : '0',
-		'JsHttpRequest' : '1-xml'})
-		
-	
-	results = info['js']['data']
-	
-	
 	data = '{ "time" : "' + str(now) + '", "vod" : [ \n'
-
-	for i in results:
-		name 	= i["name"]
-		cmd 	= i['cmd']
-		logo 	= i["screenshot_uri"]
+	
+	page = 1;
+	pages = 0;
+	total_items = 1.0;
+	max_page_items = 1.0;
+	
+	while True:
+		info = retrieveData(url, values = {
+			'type' : 'vod', 
+			'action' : 'get_ordered_list',
+			'sortby' : 'added',
+			'not_ended' : '0',
+			'p' : page,
+			'fav' : '0',
+			'JsHttpRequest' : '1-xml'})
 		
-		data += '{"name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'"}, \n'
+		total_items = float(info['js']['total_items']);
+		max_page_items = float(info['js']['max_page_items']);
+		pages = math.ceil(total_items/max_page_items);
+		
+		results = info['js']['data']
 
+
+		for i in results:
+			name 	= i["name"]
+			cmd 	= i['cmd']
+			logo 	= i["screenshot_uri"]
+		
+			data += '{"name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'"}, \n'
+
+		page += 1;
+		if page > pages or page == 10:
+			break;
 
 	data = data[:-3] + '\n]}'
 
@@ -180,6 +219,7 @@ def getAllChannels(url, path):
 		'action' : 'get_all_channels',
 		'JsHttpRequest' : '1-xml'})
 	
+	
 	results = info['js']['data']
 
 	data = '{ "time" : "' + str(now) + '", "channels" : [ \n'
@@ -194,28 +234,44 @@ def getAllChannels(url, path):
 		
 		data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
 
-	# retrieve adults
-	info = retrieveData(url, values = {
-		'type' : 'itv', 
-		'action' : 'get_ordered_list',
-		'genre' : '10',
-		'JsHttpRequest' : '1-xml'})
+
+	page = 1;
+	pages = 0;
+	total_items = 1.0;
+	max_page_items = 1.0;
+
+	while True:
+		# retrieve adults
+		info = retrieveData(url, values = {
+			'type' : 'itv', 
+			'action' : 'get_ordered_list',
+			'genre' : '10',
+			'p' : page,
+			'fav' : '0',
+			'JsHttpRequest' : '1-xml'})
 	
-	results = info['js']['data']
+		total_items = float(info['js']['total_items']);
+		max_page_items = float(info['js']['max_page_items']);
+		pages = math.ceil(total_items/max_page_items);
+	
+		results = info['js']['data']
 
-	for i in results:
-		number 	= i["number"]
-		name 	= i["name"]
-		cmd 	= i['cmd']
-		logo 	= i["logo"]
-		tmp 	= i["use_http_tmp_link"]
-		genre_id 	= i["tv_genre_id"];
+		for i in results:
+			number 	= i["number"]
+			name 	= i["name"]
+			cmd 	= i['cmd']
+			logo 	= i["logo"]
+			tmp 	= i["use_http_tmp_link"]
+			genre_id 	= i["tv_genre_id"];
 		
-		data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
+			data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
 
-
+		page += 1;
+		if page > pages:
+			break;
 	
 	data = data[:-3] + '\n]}'
+	
 
 	with open(portalurl, 'w') as f: f.write(data.encode('utf-8'));
 	
@@ -324,6 +380,10 @@ def main(argv):
       	
       elif argv[0] == 'cache':
       	clearCache(argv[1], argv[2]);
+      	
+      elif argv[0] == 'profile':
+      	handshake(argv[1]);
+
 
 
 if __name__ == "__main__":
