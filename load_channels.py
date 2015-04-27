@@ -12,6 +12,15 @@ import math
 key = ''
 mac = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
 
+def setMac(nmac):
+	global mac;
+	
+	if re.match("[0-9a-f]{2}([-:])[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", nmac.lower()):
+		mac = nmac;
+
+def getMac():
+	global mac;
+	return mac;
 
 def handshake(url):
 	global key;
@@ -89,12 +98,16 @@ def retrieveData(url, values ):
 	return info;
 
 
-def getGenres(url, path):	
+def getGenres(portal_mac, url, path):	
 	global key;
 	now = time();
 	portalurl = "_".join(re.findall("[a-zA-Z0-9]+", url));
 	portalurl = path + '/' + portalurl + '-genres';
 	
+	setMac(portal_mac);
+	
+	if not os.path.exists(path): 
+		os.makedirs(path);
 	
 	if os.path.exists(portalurl):
 		#check last time
@@ -133,12 +146,16 @@ def getGenres(url, path):
 	
 	return json.loads(data.encode('utf-8'));
 	
-def getVoD(url, path):	
+def getVoD(portal_mac, url, path):	
 	global key;
 	now = time();
 	portalurl = "_".join(re.findall("[a-zA-Z0-9]+", url));
 	portalurl = path + '/' + portalurl + '-vod';
 	
+	setMac(portal_mac);
+	
+	if not os.path.exists(path):
+		os.makedirs(path)
 	
 	if os.path.exists(portalurl):
 		#check last time
@@ -194,13 +211,17 @@ def getVoD(url, path):
 	
 	return json.loads(data.encode('utf-8'));
 
-def getAllChannels(url, path):
+def getAllChannels(portal_mac, url, path):
 
 	now = time();
 	
 	portalurl = "_".join(re.findall("[a-zA-Z0-9]+", url));
 	portalurl = path + '/' + portalurl
 	
+	setMac(portal_mac);
+	
+	if not os.path.exists(path):
+		os.makedirs(path)
 
 	if os.path.exists(portalurl):
 		#check last time
@@ -277,9 +298,11 @@ def getAllChannels(url, path):
 	
 	return json.loads(data.encode('utf-8'));
 
-def retriveUrl(url, channel, tmp):
+def retriveUrl(portal_mac, url, channel, tmp):
 	
 	cmd = channel;
+	
+	setMac(portal_mac);
 	
 	if tmp != "0":
 		info = retrieveData(url, values = {
@@ -317,8 +340,10 @@ def retriveUrl(url, channel, tmp):
 		return url;
 
 
-def retriveVoD(url, video):
+def retriveVoD(portal_mac, url, video):
 	
+	setMac(portal_mac);
+		
 	s = video.split(' ');
 	url = s[0];
 	if len(s)>1:
@@ -361,20 +386,20 @@ def clearCache(url, path):
 def main(argv):
 
       if argv[0] == 'load':
-      	getAllChannels(argv[1], argv[2]);
+      	getAllChannels('', argv[1], argv[2]);
       	
       elif argv[0] == 'genres':
-      	getGenres(argv[1], argv[2]);
+      	getGenres('', argv[1], argv[2]);
       	
       elif argv[0] == 'vod':
-      	getVoD(argv[1], argv[2]);
+      	getVoD('', argv[1], argv[2]);
       	
       elif argv[0] == 'channel':
-      	url = retriveUrl(argv[1], argv[2], argv[3]);
+      	url = retriveUrl('', argv[1], argv[2], argv[3]);
       	print url
 	
       elif argv[0] == 'vod_url':
-      	url = retriveVoD(argv[1], argv[2]);
+      	url = retriveVoD('', argv[1], argv[2]);
       	print url
       	os.system('/Applications/VLC.app/Contents/MacOS/VLC ' + url)
       	

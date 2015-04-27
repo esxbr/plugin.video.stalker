@@ -6,13 +6,22 @@
 		<setting id="portal_name_1" type="text" label="30000" default="NFPS" />
    	 	<setting id="portal_url_1" type="text" label="30001" default="http://portal.iptvprivateserver.tv" />
    	 	
+   	 	<setting label="30008" type="bool" id="custom_mac_1" default="false"/>
+   	 	<setting id="portal_mac_1" type="text" label="30002" default="" visible="eq(-1,true)" />
+   	 	
    	 	<setting label="33002" type="lsep"/>
 		<setting id="portal_name_2" type="text" label="30000" />
     	<setting id="portal_url_2" type="text" label="30001" />
     	
+   	 	<setting label="30008" type="bool" id="custom_mac_2" default="false"/>
+   	 	<setting id="portal_mac_2" type="text" label="30002" default="" visible="eq(-1,true)" />
+    	
     	<setting label="33003" type="lsep"/>
 		<setting id="portal_name_3" type="text" label="30000" />
     	<setting id="portal_url_3" type="text" label="30001" />
+    	
+   	 	<setting label="30008" type="bool" id="custom_mac_3" default="false"/>
+   	 	<setting id="portal_mac_3" type="text" label="30002" default="" visible="eq(-1,true)" />
     	
     </category>
     <category label="32002">

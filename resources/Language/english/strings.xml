@@ -3,7 +3,8 @@
 <strings>
     <string id="30000">Name</string>
     <string id="30001">Url</string>
-    <string id="30002">Mac Address</string>
+    <string id="30002">Mac</string>
+    <string id="30008">Custom Mac Address</string>
     
 
     <string id="30006">Password</string>

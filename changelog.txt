@@ -3,4 +3,8 @@
 1.0.6
 Few bugs fixed
 All channels will show adults if the parent config is disabled.
-Added filters
+Added channel sort
+
+1.0.7
+Custom Mac Address - Config
+Fixed error in first load
