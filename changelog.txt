@@ -8,3 +8,6 @@ Added channel sort
 1.0.7
 Custom Mac Address - Config
 Fixed error in first load
+
+1.0.8
+Fixed bug custom mac address

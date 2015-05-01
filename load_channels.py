@@ -12,6 +12,17 @@ import math
 key = ''
 mac = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
 
+def is_valid_url(url):
+    import re
+    regex = re.compile(
+        r'(^https?://|^rtmp://)'  # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    return url is not None and regex.search(url)
+
 def setMac(nmac):
 	global mac;
 	
@@ -74,7 +85,7 @@ def retrieveData(url, values ):
 		
 		headers 	= { 
 			'User-Agent' : user_agent, 
-			'Cookie' : 'mac=' + mac.replace(':', '%3') + '; stb_lang=en; timezone=' + timezone,
+			'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
 			'Referer' : url + refer,
 			'Accept' : '*/*',
 			'X-User-Agent' : 'Model: MAG250; Link: WiFi',
@@ -252,6 +263,16 @@ def getAllChannels(portal_mac, url, path):
 		logo 	= i["logo"]
 		tmp 	= i["use_http_tmp_link"]
 		genre_id 	= i["tv_genre_id"];
+		
+		_s1 = cmd.split(' ');	
+		_s2 = _s1[0];
+		if len(_s1)>1:
+			_s2 = _s1[1];
+		
+		#validate url
+		if not is_valid_url(_s2):
+			#print 'invalid ' + _s2;
+			continue;
 		
 		data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
 
