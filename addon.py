@@ -117,6 +117,10 @@ def genreLevel():
 	stalker_url = args.get('stalker_url', None);
 	stalker_url = stalker_url[0];
 	
+	portal_name = args.get('title', None);
+	if portal_name != None:
+		portal_name = portal_name[0];
+	
 	portal_mac = args.get('portal_mac', '');
 	if portal_mac != '':
 		portal_mac = portal_mac[0];
@@ -124,19 +128,20 @@ def genreLevel():
 	try:
 		data = load_channels.getGenres(portal_mac, stalker_url, addondir);
 		
-	except:
-		xbmcgui.Dialog().notification(addonname, 'Server Offline', xbmcgui.NOTIFICATION_ERROR );
+	except Exception as e:
+		error = 'Server Offline';
+		if 'Authorization failed' in str(e):
+			error = 'Authorization failed.';
+		xbmcgui.Dialog().notification(addonname, error, xbmcgui.NOTIFICATION_ERROR );
+		
 		return;
-	
-	
-	
-	data = data['genres'];
-	
 
+	data = data['genres'];
 		
 	url = build_url({
 		'mode': 'vod', 
 		'stalker_url' : stalker_url, 
+		'portal_name' : portal_name,
 		'portal_mac' : portal_mac
 	});
 			
@@ -154,6 +159,7 @@ def genreLevel():
 		url = build_url({
 			'mode': 'channels', 
 			'stalker_url' : stalker_url, 
+			'portal_name' : portal_name, 
 			'genre_id': id, 
 			'genre_name': title.title(), 
 			'portal_mac' : portal_mac
@@ -174,6 +180,10 @@ def vodLevel():
 	stalker_url = args.get('stalker_url', None);
 	stalker_url = stalker_url[0];
 	
+	portal_name = args.get('portal_name', None);
+	if portal_name != None:
+		portal_name = portal_name[0];
+	
 	portal_mac = args.get('portal_mac', '');
 	if portal_mac != '':
 		portal_mac = portal_mac[0];
@@ -182,7 +192,10 @@ def vodLevel():
 		data = load_channels.getVoD(portal_mac, stalker_url, addondir);
 		
 	except:
-		xbmcgui.Dialog().notification(addonname, 'Server Offline', xbmcgui.NOTIFICATION_ERROR );
+		error = 'Server Offline';
+		if 'Authorization failed' in str(e):
+			error = 'Authorization failed.';
+		xbmcgui.Dialog().notification(addonname, error, xbmcgui.NOTIFICATION_ERROR );
 		return;
 	
 	
@@ -204,6 +217,7 @@ def vodLevel():
 		url = build_url({
 				'mode': 'play', 
 				'stalker_url' : stalker_url, 
+				'portal_name' : portal_name, 
 				'cmd': cmd, 
 				'tmp' : '0', 
 				'title' : name.encode("utf-8"),
@@ -232,6 +246,10 @@ def channelLevel():
 	genre_id_main = args.get('genre_id', None);
 	genre_id_main = genre_id_main[0];
 	
+	portal_name = args.get('portal_name', None);
+	if portal_name != None:
+		portal_name = portal_name[0];
+	
 	portal_mac = args.get('portal_mac', '');
 	if portal_mac != '':
 		portal_mac = portal_mac[0];
@@ -240,7 +258,10 @@ def channelLevel():
 		data = load_channels.getAllChannels(portal_mac, stalker_url, addondir);
 		
 	except:
-		xbmcgui.Dialog().notification(addonname, 'Server Offline', xbmcgui.NOTIFICATION_ERROR );
+		error = 'Server Offline';
+		if 'Authorization failed' in str(e):
+			error = 'Authorization failed.';
+		xbmcgui.Dialog().notification(addonname, error, xbmcgui.NOTIFICATION_ERROR );
 		return;
 	
 	
@@ -277,6 +298,7 @@ def channelLevel():
 				url = build_url({
 					'mode': 'play', 
 					'stalker_url' : stalker_url, 
+					'portal_name' : portal_name,  
 					'cmd': cmd, 
 					'tmp' : tmp, 
 					'title' : name.encode("utf-8"),
@@ -309,6 +331,10 @@ def playLevel():
 	stalker_url = args.get('stalker_url', None)
 	stalker_url = stalker_url[0];
 	
+	portal_name = args.get('portal_name', None);
+	if portal_name != None:
+		portal_name = portal_name[0];
+	
 	portal_mac = args.get('portal_mac', '');
 	if portal_mac != '':
 		portal_mac = portal_mac[0];
@@ -328,10 +354,16 @@ def playLevel():
 	except:
 		dp.close();
 		
-		xbmcgui.Dialog().notification(addonname, 'Channel Offline', xbmcgui.NOTIFICATION_INFO );
+		error = 'Channel Offline';
+		if 'Authorization failed' in str(e):
+			error = 'Authorization failed.';
+		xbmcgui.Dialog().notification(addonname, error, xbmcgui.NOTIFICATION_INFO );
 		return;
 	
 	dp.update(80);
+	
+	if portal_name != None:
+		title += ' (' + portal_name + ')';
 	
 	li = xbmcgui.ListItem(title, iconImage=logo_url);
 	li.setInfo('video', {'Title': title, 'Genre': genre_name});

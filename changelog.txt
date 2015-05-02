@@ -11,3 +11,7 @@ Fixed error in first load
 
 1.0.8
 Fixed bug custom mac address
+
+1.0.9
+Portal name added on channel name
+NTV

@@ -12,17 +12,6 @@ import math
 key = ''
 mac = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
 
-def is_valid_url(url):
-    import re
-    regex = re.compile(
-        r'(^https?://|^rtmp://)'  # http:// or https://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
-        r'localhost|'  # localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
-        r'(?::\d+)?'  # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-    return url is not None and regex.search(url)
-
 def setMac(nmac):
 	global mac;
 	
@@ -40,7 +29,7 @@ def handshake(url):
 		'type' : 'stb', 
 		'action' : 'handshake',
 		'JsHttpRequest' : '1-xml'})
-
+		
 	key = info['js']['token']
 	
 	#getProfile(url);
@@ -71,8 +60,7 @@ def getProfile(url):
 
 def retrieveData(url, values ):
 	global key, mac;
-	
-	
+		
 	url += '/stalker_portal'
 	load = '/server/load.php'
 	refer = '/c/'
@@ -81,8 +69,6 @@ def retrieveData(url, values ):
 	user_agent 	= 'Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG200 stbapp ver: 2 rev: 250 Safari/533.3';
 	
 	if key != '':
-		#print 'Authorization Bearer ' + key;
-		
 		headers 	= { 
 			'User-Agent' : user_agent, 
 			'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
@@ -104,6 +90,12 @@ def retrieveData(url, values ):
 	data = urllib.urlencode(values);
 	req = urllib2.Request(url + load, data, headers);
 	data = urllib2.urlopen(req).read().decode("utf-8");
+	
+	
+	if 'Authorization failed' in data:
+		raise Exception(data);
+		return;
+	
 	info = json.loads(data)
 
 	return info;
@@ -158,7 +150,6 @@ def getGenres(portal_mac, url, path):
 	return json.loads(data.encode('utf-8'));
 	
 def getVoD(portal_mac, url, path):	
-	global key;
 	now = time();
 	portalurl = "_".join(re.findall("[a-zA-Z0-9]+", url));
 	portalurl = path + '/' + portalurl + '-vod';
@@ -224,6 +215,8 @@ def getVoD(portal_mac, url, path):
 
 def getAllChannels(portal_mac, url, path):
 
+	added = False;
+	
 	now = time();
 	
 	portalurl = "_".join(re.findall("[a-zA-Z0-9]+", url));
@@ -252,7 +245,9 @@ def getAllChannels(portal_mac, url, path):
 		'JsHttpRequest' : '1-xml'})
 	
 	
-	results = info['js']['data']
+	results = info['js']['data'];
+	
+	#print results;
 
 	data = '{ "time" : "' + str(now) + '", "channels" : [ \n'
 
@@ -269,18 +264,14 @@ def getAllChannels(portal_mac, url, path):
 		if len(_s1)>1:
 			_s2 = _s1[1];
 		
-		#validate url
-		if not is_valid_url(_s2):
-			#print 'invalid ' + _s2;
-			continue;
-		
+		added = True;
 		data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
 
 
 	page = 1;
 	pages = 0;
-	total_items = 1.0;
-	max_page_items = 1.0;
+	total_items = 0;
+	max_page_items = 0;
 
 	while True:
 		# retrieve adults
@@ -307,13 +298,19 @@ def getAllChannels(portal_mac, url, path):
 			genre_id 	= i["tv_genre_id"];
 		
 			data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
+			
+			added = True;
 
 		page += 1;
 		if page > pages:
 			break;
 	
-	data = data[:-3] + '\n]}'
 	
+	if not added:
+		data = data + '\n]}';
+	else:
+		data = data[:-3] + '\n]}';
+
 
 	with open(portalurl, 'w') as f: f.write(data.encode('utf-8'));
 	
@@ -321,9 +318,19 @@ def getAllChannels(portal_mac, url, path):
 
 def retriveUrl(portal_mac, url, channel, tmp):
 	
-	cmd = channel;
-	
 	setMac(portal_mac);
+		
+	if 'matrix'in channel:
+		return retrieve_matrixUrl(url, channel, tmp);
+		
+	else:
+		return retrive_defaultUrl(url, channel, tmp);
+		
+	
+		
+def retrive_defaultUrl(url, channel, tmp):
+	
+	cmd = channel;
 	
 	if tmp != "0":
 		info = retrieveData(url, values = {
@@ -336,6 +343,8 @@ def retriveUrl(portal_mac, url, channel, tmp):
 		cmd = info['js']['cmd'];
 		
 	s = cmd.split(' ');
+	
+	#print info;
 			
 	url = s[0];
 	
@@ -359,6 +368,27 @@ def retriveUrl(portal_mac, url, channel, tmp):
 		return url_base + '/' + data;
 	else:
 		return url;
+
+
+def retrieve_matrixUrl(url, channel, tmp):
+
+	channel = channel.split('/');
+	channel = channel[len(channel) -1];
+	
+	url += '/stalker_portal/server/api/matrix.php?channel=' + channel + '&mac=' + mac;
+	
+	# RETRIEVE THE 1 EXTM3U
+	request = urllib2.Request(url)
+	response  = urllib2.urlopen(request);
+	data = response.read().decode("utf-8");
+
+	_s1 = data.split(' ');	
+	data = _s1[0];
+	if len(_s1)>1:
+		data = _s1[len(_s1) -1];
+	
+	return data;
+
 
 
 def retriveVoD(portal_mac, url, video):
@@ -407,22 +437,21 @@ def clearCache(url, path):
 def main(argv):
 
       if argv[0] == 'load':
-      	getAllChannels('', argv[1], argv[2]);
+      	getAllChannels(argv[1], argv[2], argv[3]);
       	
       elif argv[0] == 'genres':
-      	getGenres('', argv[1], argv[2]);
-      	
+      	getGenres(argv[1], argv[2], argv[3]);
+
       elif argv[0] == 'vod':
       	getVoD('', argv[1], argv[2]);
       	
-      elif argv[0] == 'channel':
-      	url = retriveUrl('', argv[1], argv[2], argv[3]);
+      elif argv[0] == 'channel':     	
+      	url = retriveUrl(argv[1], argv[2], argv[3], argv[4]);
       	print url
 	
       elif argv[0] == 'vod_url':
       	url = retriveVoD('', argv[1], argv[2]);
       	print url
-      	os.system('/Applications/VLC.app/Contents/MacOS/VLC ' + url)
       	
       elif argv[0] == 'cache':
       	clearCache(argv[1], argv[2]);
