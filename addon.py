@@ -10,6 +10,8 @@ import load_channels
 import hashlib
 import re
 
+import server
+
 addon       = xbmcaddon.Addon()
 addonname   = addon.getAddonInfo('name')
 addondir    = xbmc.translatePath( addon.getAddonInfo('profile') ) 
@@ -17,30 +19,33 @@ addondir    = xbmc.translatePath( addon.getAddonInfo('profile') )
 base_url = sys.argv[0]
 addon_handle = int(sys.argv[1])
 args = urlparse.parse_qs(sys.argv[2][1:])
-
+go = True;
 
 #xbmcgui.Dialog().ok(addonname, 'aaa')
 
 xbmcplugin.setContent(addon_handle, 'movies')
 
 
-mode = args.get('mode', None)
+def portalConfig(number):
 
-portal_name_1 = args.get('portal_url_1', None)
-portal_url_1 = args.get('portal_url_1', None)
-portal_mac_1 = args.get('portal_mac_1', None)
+	portal = {};
+	
+	portal['parental'] = addon.getSetting("parental");
+	portal['password'] = addon.getSetting("password");
+	
+	portal['name'] = addon.getSetting("portal_name_" + number);
+	portal['url'] = addon.getSetting("portal_url_" + number);
+	portal['mac'] = configMac(number);
+	portal['serial'] = configSerialNumber(number);
+		
+	return portal;
 
-portal_name_2 = args.get('portal_url_1', None)
-portal_url_2 = args.get('portal_url_1', None)
-portal_mac_2 = args.get('portal_mac_2', None)
-
-portal_name_3 = args.get('portal_url_3', None)
-portal_url_3 = args.get('portal_url_3', None)
-portal_mac_3 = args.get('portal_mac_3', None)
 
 def configMac(number):
-	custom_mac = xbmcplugin.getSetting(int(sys.argv[1]), 'custom_mac_' + number);
-	portal_mac = xbmcplugin.getSetting(int(sys.argv[1]), 'portal_mac_' + number);
+	global go;
+	
+	custom_mac = addon.getSetting('custom_mac_' + number);
+	portal_mac = addon.getSetting('portal_mac_' + number);
 	
 	if custom_mac != 'true':
 		portal_mac = '';
@@ -48,58 +53,54 @@ def configMac(number):
 	elif not (custom_mac == 'true' and re.match("[0-9a-f]{2}([-:])[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", portal_mac.lower()) != None):
 		xbmcgui.Dialog().notification(addonname, 'Custom Mac ' + number + ' is Invalid.', xbmcgui.NOTIFICATION_ERROR );
 		portal_mac = '';
+		go=False;
 		
 	return portal_mac;
-
-
-if portal_url_1 is None:
-
-	portal_name_1 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_1");
-	parental = xbmcplugin.getSetting(int(sys.argv[1]), "parental");
-	password = xbmcplugin.getSetting(int(sys.argv[1]), "password");
 	
-	portal_url_1 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_1");
-	portal_mac_1 = configMac('1');
+	
+def configSerialNumber(number):
+	global go;
+	
+	send_serial = addon.getSetting('send_serial_' + number);
+	custom_serial = addon.getSetting('custom_serial_' + number);
+	serial_number = addon.getSetting('serial_number_' + number);
+	device_id = addon.getSetting('device_id_' + number);
+	device_id2 = addon.getSetting('device_id2_' + number);
+	signature = addon.getSetting('signature_' + number);
+
+	
+	if send_serial != 'true':
+		return None;
+	
+	elif send_serial == 'true' and custom_serial == 'false':
+		return {'custom' : False};
 		
-	portal_name_2 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_2");
-	portal_url_2 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_2");
-	portal_mac_2 = configMac('2');
+	elif send_serial == 'true' and custom_serial == 'true':
 	
-	portal_name_3 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_name_3");
-	portal_url_3 = xbmcplugin.getSetting(int(sys.argv[1]), "portal_url_3");
-	portal_mac_3 = configMac('3');
+		if serial_number == '' or device_id == '' or device_id2 == '' or signature == '':
+			xbmcgui.Dialog().notification(addonname, 'Serial information is invalid.', xbmcgui.NOTIFICATION_ERROR );
+			go=False;
+			return None;
 	
-else:
-	parental = parental[0];
-	password = password[0];
-	portal_name_1 = portal_name_1[0];
-	portal_url_1 = portal_url_1[0];
-	portal_mac_1 = portal_mac_1[0];
-	
-	portal_name_2 = portal_name_2[0];
-	portal_url_2 = portal_url_2[0];
-	portal_mac_2 = portal_mac_2[0];
-	
-	portal_name_3 = portal_name_3[0];
-	portal_url_3 = portal_url_3[0];
-	portal_mac_3 = portal_mac_3[0];
-	
+		return {'custom' : True, 'sn' : serial_number, 'device_id' : device_id, 'device_id2' : device_id2, 'signature' : signature};
+		
+	return None;
 
 
-def addPortal(portal_name, portal_url, portal_mac ):
-	if portal_url != '':
-		url = build_url({
-			'mode': 'genres', 
-			'stalker_url' : portal_url, 
-			'portal_mac' : portal_mac, 
-			'title' : portal_name
-			});
-			
-		cmd = 'XBMC.RunPlugin(' + base_url + '?mode=cache&stalker_url=' + portal_url + ')';		
-		li = xbmcgui.ListItem(portal_name, iconImage='DefaultProgram.png')
-		li.addContextMenuItems([ ('Clear Cache', cmd) ]);
+def addPortal(portal):
 
-		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True);
+
+	url = build_url({
+		'mode': 'genres', 
+		'portal' : json.dumps(portal)
+		});
+	
+	cmd = 'XBMC.RunPlugin(' + base_url + '?mode=cache&stalker_url=' + portal['url'] + ')';	
+	
+	li = xbmcgui.ListItem(portal['name'], iconImage='DefaultProgram.png')
+	li.addContextMenuItems([ ('Clear Cache', cmd) ]);
+
+	xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True);
 	
 	
 def build_url(query):
@@ -107,26 +108,21 @@ def build_url(query):
 
 
 def homeLevel():
+	global portal_1, portal_2, portal_3, go;
+	
+	#todo - check none portal
 
-	addPortal(portal_name_1,portal_url_1, portal_mac_1);
-	addPortal(portal_name_2,portal_url_2, portal_mac_2);
-	addPortal(portal_name_3,portal_url_3, portal_mac_3);
-	xbmcplugin.endOfDirectory(addon_handle);
+	if go:
+		addPortal(portal_1);
+		addPortal(portal_2);
+		addPortal(portal_3);
+	
+		xbmcplugin.endOfDirectory(addon_handle);
 
 def genreLevel():
-	stalker_url = args.get('stalker_url', None);
-	stalker_url = stalker_url[0];
-	
-	portal_name = args.get('title', None);
-	if portal_name != None:
-		portal_name = portal_name[0];
-	
-	portal_mac = args.get('portal_mac', '');
-	if portal_mac != '':
-		portal_mac = portal_mac[0];
 	
 	try:
-		data = load_channels.getGenres(portal_mac, stalker_url, addondir);
+		data = load_channels.getGenres(portal['mac'], portal['url'], portal['serial'], addondir);
 		
 	except Exception as e:
 		error = 'Server Offline';
@@ -140,9 +136,7 @@ def genreLevel():
 		
 	url = build_url({
 		'mode': 'vod', 
-		'stalker_url' : stalker_url, 
-		'portal_name' : portal_name,
-		'portal_mac' : portal_mac
+		'portal' : json.dumps(portal)
 	});
 			
 	li = xbmcgui.ListItem('VoD', iconImage='DefaultVideo.png')
@@ -158,11 +152,9 @@ def genreLevel():
 		
 		url = build_url({
 			'mode': 'channels', 
-			'stalker_url' : stalker_url, 
-			'portal_name' : portal_name, 
 			'genre_id': id, 
 			'genre_name': title.title(), 
-			'portal_mac' : portal_mac
+			'portal' : json.dumps(portal)
 			});
 			
 		if id == '10':
@@ -177,19 +169,9 @@ def genreLevel():
 	xbmcplugin.endOfDirectory(addon_handle);
 
 def vodLevel():
-	stalker_url = args.get('stalker_url', None);
-	stalker_url = stalker_url[0];
-	
-	portal_name = args.get('portal_name', None);
-	if portal_name != None:
-		portal_name = portal_name[0];
-	
-	portal_mac = args.get('portal_mac', '');
-	if portal_mac != '':
-		portal_mac = portal_mac[0];
 	
 	try:
-		data = load_channels.getVoD(portal_mac, stalker_url, addondir);
+		data = load_channels.getVoD(portal['mac'], portal['url'], portal['serial'], addondir);
 		
 	except:
 		error = 'Server Offline';
@@ -209,27 +191,24 @@ def vodLevel():
 		
 		
 		if logo != '':
-			logo_url = stalker_url + logo;
+			logo_url = portal['url'] + logo;
 		else:
 			logo_url = 'DefaultVideo.png';
 				
 				
 		url = build_url({
 				'mode': 'play', 
-				'stalker_url' : stalker_url, 
-				'portal_name' : portal_name, 
 				'cmd': cmd, 
 				'tmp' : '0', 
 				'title' : name.encode("utf-8"),
 				'genre_name' : 'VoD',
 				'logo_url' : logo_url, 
-				'portal_mac' : portal_mac
+				'portal' : json.dumps(portal)
 				});
 			
 
 		li = xbmcgui.ListItem(name, iconImage=logo_url, thumbnailImage=logo_url)
 		li.setInfo(type='Video', infoLabels={ "Title": name })
-		#li.setProperty('IsPlayable', 'true')
 
 		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
 	
@@ -239,23 +218,9 @@ def vodLevel():
 
 def channelLevel():
 	stop=False;
-	
-	stalker_url = args.get('stalker_url', None);
-	stalker_url = stalker_url[0];
-	
-	genre_id_main = args.get('genre_id', None);
-	genre_id_main = genre_id_main[0];
-	
-	portal_name = args.get('portal_name', None);
-	if portal_name != None:
-		portal_name = portal_name[0];
-	
-	portal_mac = args.get('portal_mac', '');
-	if portal_mac != '':
-		portal_mac = portal_mac[0];
-	
+		
 	try:
-		data = load_channels.getAllChannels(portal_mac, stalker_url, addondir);
+		data = load_channels.getAllChannels(portal['mac'], portal['url'], portal['serial'], addondir);
 		
 	except:
 		error = 'Server Offline';
@@ -266,45 +231,46 @@ def channelLevel():
 	
 	
 	data = data['channels'];
-	
 	genre_name 	= args.get('genre_name', None);
 	
+	genre_id_main = args.get('genre_id', None);
+	genre_id_main = genre_id_main[0];
 	
-	if genre_id_main == '10' and parental == 'true':
-		result = xbmcgui.Dialog().input('Parental', hashlib.md5(password.encode('utf-8')).hexdigest(), type=xbmcgui.INPUT_PASSWORD, option=xbmcgui.PASSWORD_VERIFY);
+	if genre_id_main == '10' and portal['parental'] == 'true':
+		result = xbmcgui.Dialog().input('Parental', hashlib.md5(portal['password'].encode('utf-8')).hexdigest(), type=xbmcgui.INPUT_PASSWORD, option=xbmcgui.PASSWORD_VERIFY);
 		if result == '':
 			stop = True;
 
+	
 	if stop == False:
 		for i in data:
-			name 	= i["name"];
-			cmd 	= i["cmd"];
-			tmp 	= i["tmp"];
-			number 	= i["number"];
+			name 		= i["name"];
+			cmd 		= i["cmd"];
+			tmp 		= i["tmp"];
+			number 		= i["number"];
 			genre_id 	= i["genre_id"];
-			logo 	= i["logo"];
+			logo 		= i["logo"];
 		
-			if genre_id_main == '*' and genre_id == '10' and parental == 'true':
+			if genre_id_main == '*' and genre_id == '10' and portal['parental'] == 'true':
 				continue;
+		
 		
 			if genre_id_main == genre_id or genre_id_main == '*':
 		
 				if logo != '':
-					logo_url = stalker_url + '/stalker_portal/misc/logos/320/' + logo;
+					logo_url = portal['url'] + '/stalker_portal/misc/logos/320/' + logo;
 				else:
 					logo_url = 'DefaultVideo.png';
 				
 				
 				url = build_url({
 					'mode': 'play', 
-					'stalker_url' : stalker_url, 
-					'portal_name' : portal_name,  
 					'cmd': cmd, 
 					'tmp' : tmp, 
 					'title' : name.encode("utf-8"),
 					'genre_name' : genre_name,
-					'logo_url' : logo_url, 
-					'portal_mac' : portal_mac
+					'logo_url' : logo_url,  
+					'portal' : json.dumps(portal)
 					});
 			
 
@@ -327,17 +293,6 @@ def playLevel():
 	
 	dp = xbmcgui.DialogProgressBG();
 	dp.create('IPTV', 'Loading ...');
-
-	stalker_url = args.get('stalker_url', None)
-	stalker_url = stalker_url[0];
-	
-	portal_name = args.get('portal_name', None);
-	if portal_name != None:
-		portal_name = portal_name[0];
-	
-	portal_mac = args.get('portal_mac', '');
-	if portal_mac != '':
-		portal_mac = portal_mac[0];
 	
 	title 	= args['title'][0];
 	cmd 	= args['cmd'][0];
@@ -345,11 +300,13 @@ def playLevel():
 	genre_name 	= args['genre_name'][0];
 	logo_url 	= args['logo_url'][0];
 	
+	
 	try:
-		if genre_name!='VoD':
-			url = load_channels.retriveUrl(portal_mac, stalker_url, cmd, tmp);
+		if genre_name != 'VoD':
+			url = load_channels.retriveUrl(portal['mac'], portal['url'], portal['serial'], cmd, tmp);
 		else:
-			url = load_channels.retriveVoD(portal_mac, stalker_url, cmd);
+			url = load_channels.retriveVoD(portal['mac'], portal['url'], portal['serial'], cmd);
+
 	
 	except:
 		dp.close();
@@ -362,8 +319,9 @@ def playLevel():
 	
 	dp.update(80);
 	
-	if portal_name != None:
-		title += ' (' + portal_name + ')';
+	
+	
+	title += ' (' + portal['name'] + ')';
 	
 	li = xbmcgui.ListItem(title, iconImage=logo_url);
 	li.setInfo('video', {'Title': title, 'Genre': genre_name});
@@ -372,6 +330,18 @@ def playLevel():
 	dp.update(100);
 	
 	dp.close();
+
+
+mode = args.get('mode', None);
+portal =  args.get('portal', None)
+
+if portal is None:
+	portal_1 = portalConfig('1');
+	portal_2 = portalConfig('2');
+	portal_3 = portalConfig('3');	
+else:
+	portal = json.loads(portal[0]);
+
 
 if mode is None:
 	homeLevel();
@@ -387,12 +357,16 @@ elif mode[0] == 'genres':
 elif mode[0] == 'vod':
 	vodLevel();
 
-	
 elif mode[0] == 'channels':
 	channelLevel();
 	
 elif mode[0] == 'play':
 	playLevel();
+	
+elif mode[0] == 'server':
+	server.startServer(_portals = { '1' : portal_1, '2' : portal_2, '3' : portal_3 });
+	xbmcgui.Dialog().ok(addonname, json.dumps(portal_1));
+	
 
 
 

@@ -1,31 +1,59 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-	<category label="32001">
-	
-		<setting label="33001" type="lsep"/>
+   
+    <category label="33001">
 		<setting id="portal_name_1" type="text" label="30000" default="NFPS" />
    	 	<setting id="portal_url_1" type="text" label="30001" default="http://portal.iptvprivateserver.tv" />
-   	 	
    	 	<setting label="30008" type="bool" id="custom_mac_1" default="false"/>
    	 	<setting id="portal_mac_1" type="text" label="30002" default="" visible="eq(-1,true)" />
    	 	
-   	 	<setting label="33002" type="lsep"/>
+   	 	<setting label="30009" type="bool" id="send_serial_1" default="false"/>
+   	 	<setting label="30014" type="bool" id="custom_serial_1" default="false" visible="eq(-1,true)"/>
+   	 	<setting type="sep"/>
+   	 	<setting label="30010" type="text" id="serial_number_1" default="" visible="eq(-2,true) + eq(-3,true)"/>
+   	 	<setting label="30011" type="text" id="device_id_1" default="" visible="eq(-3,true) + eq(-4,true)"/>
+   	 	<setting label="30012" type="text" id="device_id2_1" default="" visible="eq(-4,true) + eq(-5,true)"/>
+   	 	<setting label="30013" type="text" id="signature_1" default="" visible="eq(-5,true) + eq(-6,true)"/>
+   	 	
+    </category>
+    
+    <category label="33002">
 		<setting id="portal_name_2" type="text" label="30000" />
     	<setting id="portal_url_2" type="text" label="30001" />
-    	
    	 	<setting label="30008" type="bool" id="custom_mac_2" default="false"/>
    	 	<setting id="portal_mac_2" type="text" label="30002" default="" visible="eq(-1,true)" />
-    	
-    	<setting label="33003" type="lsep"/>
+   	 	
+   	 	<setting label="30009" type="bool" id="send_serial_2" default="false"/>
+   	 	<setting label="30014" type="bool" id="custom_serial_2" default="false" visible="eq(-1,true)"/>
+   	 	<setting type="sep"/>
+   	 	<setting label="30010" type="text" id="serial_number_2" default="" visible="eq(-2,true) + eq(-3,true)"/>
+   	 	<setting label="30011" type="text" id="device_id_2" default="" visible="eq(-3,true) + eq(-4,true)"/>
+   	 	<setting label="30012" type="text" id="device_id2_2" default="" visible="eq(-4,true) + eq(-5,true)"/>
+   	 	<setting label="30013" type="text" id="signature_2" default="" visible="eq(-5,true) + q(-6,true)"/>
+    </category>
+    
+    <category label="33003">
 		<setting id="portal_name_3" type="text" label="30000" />
     	<setting id="portal_url_3" type="text" label="30001" />
-    	
    	 	<setting label="30008" type="bool" id="custom_mac_3" default="false"/>
    	 	<setting id="portal_mac_3" type="text" label="30002" default="" visible="eq(-1,true)" />
-    	
+   	 	
+   	 	<setting label="30009" type="bool" id="send_serial_3" default="false"/>
+   	 	<setting label="30014" type="bool" id="custom_serial_3" default="false" visible="eq(-1,true)"/>
+   	 	<setting type="sep"/>
+   	 	<setting label="30010" type="text" id="serial_number_3" default="" visible="eq(-2,true) + eq(-3,true)"/>
+   	 	<setting label="30011" type="text" id="device_id_3" default="" visible="eq(-3,true) + eq(-4,true)"/>
+   	 	<setting label="30012" type="text" id="device_id2_3" default="" visible="eq(-4,true) + eq(-5,true)"/>
+   	 	<setting label="30013" type="text" id="signature_3" default="" visible="eq(-5,true) + eq(-6,true)"/>
     </category>
+    
+    
     <category label="32002">
     	<setting label="30007" type="bool" id="parental" default="false"/>
     	<setting label="30006" type="text" id="password" option="hidden" default="0000"/>
+    </category>
+    
+    <category label="33004">
+    	<setting label="30016" type="action" action="XBMC.RunPlugin(plugin://plugin.video.stalker/?mode=server&action=start)"/>
     </category>
 </settings>

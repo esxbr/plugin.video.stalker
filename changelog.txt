@@ -15,3 +15,8 @@ Fixed bug custom mac address
 1.0.9
 Portal name added on channel name
 NTV
+
+1.0.10
+Add serial config
+M3U Server (testing)
+Ipguys (must enable send serial and add serial number, devices information)
