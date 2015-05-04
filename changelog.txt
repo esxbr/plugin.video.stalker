@@ -20,3 +20,6 @@ NTV
 Add serial config
 M3U Server (testing)
 Ipguys (must enable send serial and add serial number, devices information)
+
+1.0.11
+Fixed M3U Server bug

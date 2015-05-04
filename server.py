@@ -32,9 +32,12 @@ class MyHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         global portals, server, _PORT;
-    
+        
+
         try:
             if 'channels.html' in self.path:
+            
+            	host = self.headers.get('Host');
             
             	args = parse_qs(urlparse(self.path).query)         	
             	numportal = args['portal'][0];
@@ -61,7 +64,7 @@ class MyHandler(BaseHTTPRequestHandler):
 					parameters = urllib.urlencode( { 'channel' : cmd, 'tmp' : tmp, 'portal' : numportal } );
 					
 					EXTM3U += '#EXTINF:-1, tvg-id="' + number + '" tvg-logo="' + logo + '" group-title="LIVE TV", ' + name + '\n';
-					EXTM3U += 'http://' + self.client_address[0] + ':' + str(_PORT) + '/live.html?'  + parameters +'\n\n';
+					EXTM3U += 'http://' + host + '/live.html?'  + parameters +'\n\n';
         	
         	
                 self.send_response(200)
