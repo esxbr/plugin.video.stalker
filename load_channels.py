@@ -124,6 +124,8 @@ def retrieveData(url, values ):
 	
 	data = urllib2.urlopen(req).read().decode("utf-8");
 		
+	print data;
+		
 	info = json.loads(data)
 
 	return info;

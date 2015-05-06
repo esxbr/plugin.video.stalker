@@ -54,7 +54,7 @@
     </category>
     
     <category label="33004">
-    	<setting label="30015" type="bool" id="server_enable" default="false"/>
+    	<setting label="30015" type="bool" id="server_enable" default="true"/>
     	<setting label="30017" type="number" id="server_port" default="8899" visible="eq(-1,true)"/>
     </category>
 </settings>
