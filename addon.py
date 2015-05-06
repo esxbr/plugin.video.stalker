@@ -84,7 +84,6 @@ def genreLevel():
 	li = xbmcgui.ListItem('VoD', iconImage='DefaultVideo.png')
 	xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True);
 	
-	xbmcgui.Dialog().ok(addonname, 'aaa')
 	
 	for id, i in data.iteritems():
 

@@ -31,3 +31,7 @@ Autostart M3U Server
 
 1.0.13
 Added group name on channels.m3u/html
+
+1.0.14
+Channel order fixed
+Fixed bugs

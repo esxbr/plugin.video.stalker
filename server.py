@@ -40,12 +40,12 @@ class MyHandler(BaseHTTPRequestHandler):
             	portal = portals[numportal];
             	
             	data = load_channels.getAllChannels(portal['mac'], portal['url'], portal['serial'], addondir);
-                data = data['channels']
+                data = load_channels.orderChannels(data['channels'].values());
                 
 
                 EXTM3U = "#EXTM3U\n";
                 
-                for i in data.values():
+                for i in data:
 					name 		= i["name"];
 					cmd 		= i["cmd"];
 					tmp 		= i["tmp"];
@@ -60,7 +60,7 @@ class MyHandler(BaseHTTPRequestHandler):
 					
 					parameters = urllib.urlencode( { 'channel' : cmd, 'tmp' : tmp, 'portal' : numportal } );
 					
-					EXTM3U += '#EXTINF:-1, tvg-id="' + number + '" tvg-logo="' + logo + '" group-title="' + genre_title + '", ' + name + '\n';
+					EXTM3U += '#EXTINF:-1, tvg-id="' + number + '" tvg-name="' + name + '" tvg-logo="' + logo + '" group-title="' + genre_title + '", ' + name + '\n';
 					EXTM3U += 'http://' + host + '/live.m3u?'  + parameters +'\n\n';
         	
         	

@@ -251,6 +251,21 @@ def getVoD(portal_mac, url, serial, path):
 	
 	return json.loads(data.encode('utf-8'));
 
+
+def orderChannels(channels):
+      	n_data = {};
+      	for i in channels:	
+      		number 		= i["number"];
+      		n_data[int(number)] = i;
+      	
+      	ordered = sorted(n_data);
+      	data = {};
+      	for i in ordered:	
+      		data[i] = n_data[i];
+      		
+      	return data.values();
+
+
 def getAllChannels(portal_mac, url, serial, path):
 
 	added = False;
@@ -618,13 +633,14 @@ def clearCache(url, path):
 		for file in files:
 			if file.startswith(portalurl):
 				os.remove(root + '/' + file);
-	
+
 
 def main(argv):
 
       if argv[0] == 'load':
       	#getAllChannels(argv[1], argv[2], None, argv[4]);
-      	getAllChannels(argv[1], argv[2], json.loads(argv[3]), argv[4]);
+      	data = getAllChannels(argv[1], argv[2], json.loads(argv[3]), argv[4]);
+      	
       	
       elif argv[0] == 'genres':
       	getGenres(argv[1], argv[2], None, argv[3]);
