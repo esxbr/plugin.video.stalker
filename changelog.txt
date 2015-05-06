@@ -18,8 +18,13 @@ NTV
 
 1.0.10
 Add serial config
-M3U Server (testing)
+M3U Server
 Ipguys (must enable send serial and add serial number, devices information)
 
 1.0.11
 Fixed M3U Server bug
+
+1.0.12
+EPG - epg.xml?portal=NUMBER
+Added channels.m3u
+Autostart M3U Server

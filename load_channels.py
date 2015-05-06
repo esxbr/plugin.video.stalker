@@ -9,7 +9,7 @@ from datetime import datetime
 import math
 import urllib2
 import hashlib
-
+from xml.dom import minidom
 
 key = '';
 mac = ':'.join(re.findall('..', '%012x' % uuid.getnode()));
@@ -18,7 +18,7 @@ device_id = None;
 device_id2 = None;
 signature = None;
 
-cache_version = '1'
+cache_version = '2'
 
 
 def setMac(nmac):
@@ -102,7 +102,7 @@ def retrieveData(url, values ):
 	if key != '':
 		headers 	= { 
 			'User-Agent' : user_agent, 
-			'Cookie' : 'mac=' + mac.replace(':', '%3A') + '; stb_lang=en; timezone=' + timezone,
+			'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
 			'Referer' : url + refer,
 			'Accept' : '*/*',
 			'Connection' : 'Keep-Alive',
@@ -120,16 +120,10 @@ def retrieveData(url, values ):
 
 	
 	data = urllib.urlencode(values);
-	req = urllib2.Request(url + load, data, headers);
+	req = urllib2.Request(url + load + '?' + data, headers=headers);
+	
 	data = urllib2.urlopen(req).read().decode("utf-8");
-	
-	#print data;
-	
-	
-	#if 'Authorization failed' in data:
-	#	raise Exception(data);
-	#	return;
-	
+		
 	info = json.loads(data)
 
 	return info;
@@ -291,12 +285,11 @@ def getAllChannels(portal_mac, url, serial, path):
 	
 	
 	results = info['js']['data'];
-	
-	#print results;
 
-	data = '{ "version" : "' + cache_version + '", "time" : "' + str(now) + '", "channels" : [ \n'
+	data = '{ "version" : "' + cache_version + '", "time" : "' + str(now) + '", "channels" : { \n'
 
 	for i in results:
+		id 		= i["id"]
 		number 	= i["number"]
 		name 	= i["name"]
 		cmd 	= i['cmd']
@@ -304,13 +297,14 @@ def getAllChannels(portal_mac, url, serial, path):
 		tmp 	= i["use_http_tmp_link"]
 		genre_id 	= i["tv_genre_id"];
 		
+		
 		_s1 = cmd.split(' ');	
 		_s2 = _s1[0];
 		if len(_s1)>1:
 			_s2 = _s1[1];
 		
 		added = True;
-		data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
+		data += '"' + id + '": {"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
 
 
 	page = 1;
@@ -335,6 +329,7 @@ def getAllChannels(portal_mac, url, serial, path):
 		results = info['js']['data']
 
 		for i in results:
+			id 		= i["id"]
 			number 	= i["number"]
 			name 	= i["name"]
 			cmd 	= i['cmd']
@@ -342,7 +337,7 @@ def getAllChannels(portal_mac, url, serial, path):
 			tmp 	= i["use_http_tmp_link"]
 			genre_id 	= i["tv_genre_id"];
 		
-			data += '{"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
+			data += '"' + id + '": {"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
 			
 			added = True;
 
@@ -350,16 +345,144 @@ def getAllChannels(portal_mac, url, serial, path):
 		if page > pages:
 			break;
 	
-	
+
 	if not added:
-		data = data + '\n]}';
+		data = data + '\n}}';
 	else:
-		data = data[:-3] + '\n]}';
+		data = data[:-3] + '\n}}';
 
-
+	
 	with open(portalurl, 'w') as f: f.write(data.encode('utf-8'));
 	
 	return json.loads(data.encode('utf-8'));
+
+def getEPG(portal_mac, url, serial, path):	
+	global key, cache_version;
+	
+	now = time();
+	portalurl = "_".join(re.findall("[a-zA-Z0-9]+", url));
+	portalurl = path + '/' + portalurl + '-epg';
+	
+	setMac(portal_mac);
+	setSerialNumber(serial);
+	
+	if not os.path.exists(path): 
+		os.makedirs(path);
+	
+	if os.path.exists(portalurl):
+		#check last time
+		xmldoc = minidom.parse(portalurl);
+		
+		itemlist = xmldoc.getElementsByTagName('tv');
+		
+		version = itemlist[0].attributes['cache-version'].value;
+		
+		if version != cache_version:
+			clearCache(url, path);
+			
+		else:
+			time_init = float(itemlist[0].attributes['cache-time'].value);
+			# update 2h
+			if ((now - time_init) / 3600) < 2:
+				return xmldoc.toxml(encoding='utf-8');
+	
+
+	channels = getAllChannels(portal_mac, url, serial, path);
+	channels = channels['channels'];
+	
+	handshake(url);
+	
+	info = retrieveData(url, values = {
+		'type' : 'itv', 
+		'action' : 'get_epg_info',
+		'period' : '6',
+		'JsHttpRequest' : '1-xml'})
+
+
+	results = info['js']['data'];
+	
+	doc = minidom.Document();
+	base = doc.createElement('tv');
+	base.setAttribute("cache-version", cache_version);
+	base.setAttribute("cache-time", str(now));
+	base.setAttribute("generator-info-name", "IPTV Plugin");
+	base.setAttribute("generator-info-url", "http://www.xmltv.org/");
+	doc.appendChild(base)
+
+
+	for c in results:
+		
+		if not str(c) in channels:
+			continue;
+	
+		channel = channels[str(c)];
+		name = channel['name'];
+		
+		c_entry = doc.createElement('channel');
+		c_entry.setAttribute("id", str(c));
+		base.appendChild(c_entry)
+		
+		
+		dn_entry = doc.createElement('display-name');
+		dn_entry_content = doc.createTextNode(name);
+		dn_entry.appendChild(dn_entry_content);
+		c_entry.appendChild(dn_entry);
+	
+
+	for k,v in results.iteritems():
+	
+		channel = None;
+		
+		if str(k) in channels:
+			channel = channels[str(k)];
+		
+		for epg in v:
+		
+			start_time 	= datetime.fromtimestamp(float(epg['start_timestamp']));
+			stop_time	= datetime.fromtimestamp(float(epg['stop_timestamp']));
+			
+			pg_entry = doc.createElement('programme');
+			pg_entry.setAttribute("start", start_time.strftime('%Y%m%d%H%M%S -0000'));
+			pg_entry.setAttribute("stop", stop_time.strftime('%Y%m%d%H%M%S -0000'));
+			pg_entry.setAttribute("channel", str(k));
+			base.appendChild(pg_entry);
+			
+			t_entry = doc.createElement('title');
+			t_entry.setAttribute("lang", "en");
+			t_entry_content = doc.createTextNode(epg['name']);
+			t_entry.appendChild(t_entry_content);
+			pg_entry.appendChild(t_entry);
+			
+			d_entry = doc.createElement('desc');
+			d_entry.setAttribute("lang", "en");
+			d_entry_content = doc.createTextNode(epg['descr']);
+			d_entry.appendChild(d_entry_content);
+			pg_entry.appendChild(d_entry);
+			
+			dt_entry = doc.createElement('date');
+			dt_entry_content = doc.createTextNode(epg['on_date']);
+			dt_entry.appendChild(dt_entry_content);
+			pg_entry.appendChild(dt_entry);
+			
+			c_entry = doc.createElement('category');
+			c_entry_content = doc.createTextNode(epg['category']);
+			c_entry.appendChild(c_entry_content);
+			pg_entry.appendChild(c_entry);
+			
+		
+			if channel != None and channel['logo'] != '':
+				i_entry = doc.createElement('icon');
+				i_entry.setAttribute("src", url + '/stalker_portal/misc/logos/320/' + channel['logo']);
+				i_entry.appendChild(i_entry_content);
+				pg_entry.appendChild(i_entry);
+
+	
+	with open(portalurl, 'w') as f: f.write(doc.toxml(encoding='utf-8'));
+	
+	return doc.toxml(encoding='utf-8');
+	
+
+
 
 def retriveUrl(portal_mac, url, serial, channel, tmp):
 	
@@ -459,7 +582,6 @@ def retriveVoD(portal_mac, url, serial, video):
 	
 	url = url.replace('TOMTOM:', 'http://');
 	
-	#print url;
 
 	# RETRIEVE THE 1 EXTM3U
 	request = urllib2.Request(url)
@@ -493,7 +615,8 @@ def clearCache(url, path):
 def main(argv):
 
       if argv[0] == 'load':
-      	getAllChannels(argv[1], argv[2], argv[3]);
+      	#getAllChannels(argv[1], argv[2], None, argv[4]);
+      	getAllChannels(argv[1], argv[2], json.loads(argv[3]), argv[4]);
       	
       elif argv[0] == 'genres':
       	getGenres(argv[1], argv[2], None, argv[3]);
@@ -502,7 +625,7 @@ def main(argv):
       	getVoD('', argv[1], argv[2]);
       	
       elif argv[0] == 'channel':     	
-      	url = retriveUrl(argv[1], argv[2], None, argv[3], argv[4]);
+      	url = retriveUrl(argv[1], argv[2], json.loads(argv[3]), argv[4], argv[5]);
       	print url
 	
       elif argv[0] == 'vod_url':
@@ -514,6 +637,10 @@ def main(argv):
       	
       elif argv[0] == 'profile':
       	handshake(argv[1]);
+      	
+      elif argv[0] == 'epg':
+      	url = getEPG(argv[1], argv[2], json.loads(argv[3]), argv[4]);
+      	#print url
 
 
 
