@@ -35,3 +35,6 @@ Added group name on channels.m3u/html
 1.0.14
 Channel order fixed
 Fixed bugs
+
+1.0.15
+Fixed config
