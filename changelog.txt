@@ -28,3 +28,6 @@ Fixed M3U Server bug
 EPG - epg.xml?portal=NUMBER
 Added channels.m3u
 Autostart M3U Server
+
+1.0.13
+Added group name on channels.m3u/html

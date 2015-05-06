@@ -11,14 +11,14 @@ import urllib2
 import hashlib
 from xml.dom import minidom
 
-key = '';
+key = None;
 mac = ':'.join(re.findall('..', '%012x' % uuid.getnode()));
 sn = None;
 device_id = None;
 device_id2 = None;
 signature = None;
 
-cache_version = '2'
+cache_version = '3'
 
 
 def setMac(nmac):
@@ -52,6 +52,9 @@ def setSerialNumber(serial):
 
 def handshake(url):
 	global key;
+	
+	if key != None:
+		return;
 	
 	info = retrieveData(url, values = {
 		'type' : 'stb', 
@@ -99,7 +102,7 @@ def retrieveData(url, values ):
 
 	user_agent 	= 'Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG200 stbapp ver: 4 rev: 1812 Mobile Safari/533.3';
 	
-	if key != '':
+	if key != None:
 		headers 	= { 
 			'User-Agent' : user_agent, 
 			'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
@@ -123,8 +126,6 @@ def retrieveData(url, values ):
 	req = urllib2.Request(url + load + '?' + data, headers=headers);
 	
 	data = urllib2.urlopen(req).read().decode("utf-8");
-		
-	print data;
 		
 	info = json.loads(data)
 
@@ -167,17 +168,17 @@ def getGenres(portal_mac, url, serial, path):
 	
 	results = info['js']
 	
-	data = '{ "version" : "' + cache_version + '", "time" : "' + str(now) + '", "genres" : [ \n'
+	data = '{ "version" : "' + cache_version + '", "time" : "' + str(now) + '", "genres" : {  \n'
 
 	for i in results:
 		alias 	= i["alias"]
 		id 		= i["id"]
 		title 	= i['title']
 		
-		data += '{"id":"'+ id +'", "alias":"'+ alias +'", "title":"'+ title +'"}, \n'
+		data += '"'+ id +'" : {"alias":"'+ alias +'", "title":"'+ title +'"}, \n'
 
 	
-	data = data[:-3] + '\n]}'
+	data = data[:-3] + '\n}}'
 
 	with open(portalurl, 'w') as f: f.write(data.encode('utf-8'));
 	
@@ -209,7 +210,7 @@ def getVoD(portal_mac, url, serial, path):
 	
 	handshake(url);
 	
-	data = '{ "version" : "' + cache_version + '", "time" : "' + str(now) + '", "vod" : [ \n'
+	data = '{ "version" : "' + cache_version + '", "time" : "' + str(now) + '", "vod" : [  \n'
 	
 	page = 1;
 	pages = 0;
@@ -280,6 +281,9 @@ def getAllChannels(portal_mac, url, serial, path):
 	
 	handshake(url);
 	
+	genres = getGenres(portal_mac, url, serial, path);
+	genres = genres["genres"];
+	
 	info = retrieveData(url, values = {
 		'type' : 'itv', 
 		'action' : 'get_all_channels',
@@ -299,6 +303,7 @@ def getAllChannels(portal_mac, url, serial, path):
 		tmp 	= i["use_http_tmp_link"]
 		genre_id 	= i["tv_genre_id"];
 		
+		genre_title = genres[genre_id]['title'];
 		
 		_s1 = cmd.split(' ');	
 		_s2 = _s1[0];
@@ -306,7 +311,7 @@ def getAllChannels(portal_mac, url, serial, path):
 			_s2 = _s1[1];
 		
 		added = True;
-		data += '"' + id + '": {"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
+		data += '"' + id + '": {"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'", "genre_title":"'+ genre_title +'"}, \n'
 
 
 	page = 1;
@@ -338,8 +343,9 @@ def getAllChannels(portal_mac, url, serial, path):
 			logo 	= i["logo"]
 			tmp 	= i["use_http_tmp_link"]
 			genre_id 	= i["tv_genre_id"];
+			genre_title = genres[genre_id]['title'];
 		
-			data += '"' + id + '": {"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'"}, \n'
+			data += '"' + id + '": {"number":"'+ number +'", "name":"'+ name +'", "cmd":"'+ cmd +'", "logo":"'+ logo +'", "tmp":"'+ str(tmp) +'", "genre_id":"'+ str(genre_id) +'", "genre_title":"'+ genre_title +'"}, \n'
 			
 			added = True;
 

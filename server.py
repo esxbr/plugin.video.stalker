@@ -50,6 +50,7 @@ class MyHandler(BaseHTTPRequestHandler):
 					cmd 		= i["cmd"];
 					tmp 		= i["tmp"];
 					number 		= i["number"];
+					genre_title = i["genre_title"];
 					genre_id 	= i["genre_id"];
 					logo 		= i["logo"];
 
@@ -59,7 +60,7 @@ class MyHandler(BaseHTTPRequestHandler):
 					
 					parameters = urllib.urlencode( { 'channel' : cmd, 'tmp' : tmp, 'portal' : numportal } );
 					
-					EXTM3U += '#EXTINF:-1, tvg-id="' + number + '" tvg-logo="' + logo + '" group-title="LIVE TV", ' + name + '\n';
+					EXTM3U += '#EXTINF:-1, tvg-id="' + number + '" tvg-logo="' + logo + '" group-title="' + genre_title + '", ' + name + '\n';
 					EXTM3U += 'http://' + host + '/live.m3u?'  + parameters +'\n\n';
         	
         	

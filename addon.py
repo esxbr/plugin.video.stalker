@@ -84,13 +84,11 @@ def genreLevel():
 	li = xbmcgui.ListItem('VoD', iconImage='DefaultVideo.png')
 	xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True);
 	
+	xbmcgui.Dialog().ok(addonname, 'aaa')
 	
-	for i in data:
+	for id, i in data.iteritems():
 
-		id 		= i["id"];
 		title 	= i["title"];
-		
-		#xbmcgui.Dialog().ok(addonname, title);
 		
 		url = build_url({
 			'mode': 'channels', 
@@ -117,8 +115,6 @@ def vodLevel():
 		
 	except:
 		error = 'Server Offline';
-		if 'Authorization failed' in str(e):
-			error = 'Authorization failed.';
 		xbmcgui.Dialog().notification(addonname, error, xbmcgui.NOTIFICATION_ERROR );
 		return;
 	
