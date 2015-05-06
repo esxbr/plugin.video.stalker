@@ -31,6 +31,8 @@ xbmcplugin.setContent(addon_handle, 'movies')
 
 def addPortal(portal):
 
+	if portal['url'] == '':
+		return;
 
 	url = build_url({
 		'mode': 'genres', 
@@ -159,7 +161,7 @@ def channelLevel():
 	try:
 		data = load_channels.getAllChannels(portal['mac'], portal['url'], portal['serial'], addondir);
 		
-	except:
+	except Exception as e:
 		error = 'Server Offline';
 		if 'Authorization failed' in str(e):
 			error = 'Authorization failed.';
@@ -246,7 +248,7 @@ def playLevel():
 			url = load_channels.retriveVoD(portal['mac'], portal['url'], portal['serial'], cmd);
 
 	
-	except:
+	except Exception as e:
 		dp.close();
 		
 		error = 'Channel Offline';
