@@ -20,6 +20,12 @@ signature = None;
 
 cache_version = '3'
 
+def is_json(myjson):
+  try:
+    json_object = json.loads(myjson)
+  except ValueError, e:
+    return False
+  return True
 
 def setMac(nmac):
 	global mac;
@@ -123,11 +129,16 @@ def retrieveData(url, values ):
 
 	
 	data = urllib.urlencode(values);
-	req = urllib2.Request(url + load + '?' + data, headers=headers);
 	
-	data = urllib2.urlopen(req).read().decode("utf-8");
-		
-	info = json.loads(data)
+
+	req = urllib2.Request(url + load, data, headers);
+	resp = urllib2.urlopen(req).read().decode("utf-8");
+	
+	if not is_json(resp):
+		req = urllib2.Request(url + load + '?' + data, headers=headers);
+		resp = urllib2.urlopen(req).read().decode("utf-8");
+
+	info = json.loads(resp)
 
 	return info;
 
