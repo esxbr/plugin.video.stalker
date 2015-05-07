@@ -69,10 +69,7 @@ def genreLevel():
 		data = load_channels.getGenres(portal['mac'], portal['url'], portal['serial'], addondir);
 		
 	except Exception as e:
-		error = 'Server Offline';
-		if 'Authorization failed' in str(e):
-			error = 'Authorization failed.';
-		xbmcgui.Dialog().notification(addonname, error, xbmcgui.NOTIFICATION_ERROR );
+		xbmcgui.Dialog().notification(addonname, str(e), xbmcgui.NOTIFICATION_ERROR );
 		
 		return;
 
@@ -114,9 +111,8 @@ def vodLevel():
 	try:
 		data = load_channels.getVoD(portal['mac'], portal['url'], portal['serial'], addondir);
 		
-	except:
-		error = 'Server Offline';
-		xbmcgui.Dialog().notification(addonname, error, xbmcgui.NOTIFICATION_ERROR );
+	except Exception as e:
+		xbmcgui.Dialog().notification(addonname, str(e), xbmcgui.NOTIFICATION_ERROR );
 		return;
 	
 	
@@ -162,10 +158,7 @@ def channelLevel():
 		data = load_channels.getAllChannels(portal['mac'], portal['url'], portal['serial'], addondir);
 		
 	except Exception as e:
-		error = 'Server Offline';
-		if 'Authorization failed' in str(e):
-			error = 'Authorization failed.';
-		xbmcgui.Dialog().notification(addonname, error, xbmcgui.NOTIFICATION_ERROR );
+		xbmcgui.Dialog().notification(addonname, str(e), xbmcgui.NOTIFICATION_ERROR );
 		return;
 	
 	
@@ -250,16 +243,10 @@ def playLevel():
 	
 	except Exception as e:
 		dp.close();
-		
-		error = 'Channel Offline';
-		if 'Authorization failed' in str(e):
-			error = 'Authorization failed.';
-		xbmcgui.Dialog().notification(addonname, error, xbmcgui.NOTIFICATION_INFO );
+		xbmcgui.Dialog().notification(addonname, str(e), xbmcgui.NOTIFICATION_ERROR );
 		return;
 	
 	dp.update(80);
-	
-	
 	
 	title += ' (' + portal['name'] + ')';
 	

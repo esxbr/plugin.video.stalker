@@ -138,6 +138,9 @@ def retrieveData(url, values ):
 		req = urllib2.Request(url + load + '?' + data, headers=headers);
 		resp = urllib2.urlopen(req).read().decode("utf-8");
 
+	if not is_json(resp):
+		raise Exception(resp)
+
 	info = json.loads(resp)
 
 	return info;

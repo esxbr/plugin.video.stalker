@@ -41,3 +41,7 @@ Fixed config
 
 1.0.16
 Reverted the authentication to version 1.0.11.
+
+1.0.17
+Fixed some bugs.
+Added new server page to be compatible with SIMPLE IPTV (https://play.google.com/store/apps/details?id=com.burakkal.simpleiptv&hl=en)
