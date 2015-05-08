@@ -9,6 +9,7 @@ import xbmcplugin
 import load_channels
 import hashlib
 import re
+import time
 
 import server
 import config
@@ -248,6 +249,8 @@ def playLevel():
 	
 	dp.update(80);
 	
+	title = title.decode("utf-8");
+	
 	title += ' (' + portal['name'] + ')';
 	
 	li = xbmcgui.ListItem(title, iconImage=logo_url);
@@ -290,6 +293,36 @@ elif mode[0] == 'channels':
 elif mode[0] == 'play':
 	playLevel();
 	
+elif mode[0] == 'server':
+	port = addon.getSetting('server_port');
+	
+	action =  args.get('action', None);
+	action = action[0];
+	
+	dp = xbmcgui.DialogProgressBG();
+	dp.create('IPTV', 'Working ...');
+	
+	if action == 'start':
+	
+		if server.serverOnline():
+			xbmcgui.Dialog().notification(addonname, 'Server already started.\nPort: ' + str(port), xbmcgui.NOTIFICATION_INFO );
+		else:
+			server.startServer();
+			time.sleep(5);
+			if server.serverOnline():
+				xbmcgui.Dialog().notification(addonname, 'Server started.\nPort: ' + str(port), xbmcgui.NOTIFICATION_INFO );
+			else:
+				xbmcgui.Dialog().notification(addonname, 'Server not started. Wait one moment and try again. ', xbmcgui.NOTIFICATION_ERROR );
+				
+	else:
+		if server.serverOnline():
+			server.stopServer();
+			time.sleep(5);
+			xbmcgui.Dialog().notification(addonname, 'Server stopped.', xbmcgui.NOTIFICATION_INFO );
+		else:
+			xbmcgui.Dialog().notification(addonname, 'Server is already stopped.', xbmcgui.NOTIFICATION_INFO );
+			
+	dp.close();
 
 
 

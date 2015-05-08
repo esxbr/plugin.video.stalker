@@ -15,7 +15,7 @@ import xbmcgui
 import xbmcplugin
 import config
 import re
-
+import threading
 
 addon       = xbmcaddon.Addon()
 addonname   = addon.getAddonInfo('name')
@@ -23,6 +23,48 @@ addondir    = xbmc.translatePath( addon.getAddonInfo('profile') )
 
 portals = None;
 server = None;
+
+
+class TimeoutError(RuntimeError):
+    pass
+
+class AsyncCall(object):
+    def __init__(self, fnc, callback = None):
+        self.Callable = fnc
+        self.Callback = callback
+
+    def __call__(self, *args, **kwargs):
+        self.Thread = threading.Thread(target = self.run, name = self.Callable.__name__, args = args, kwargs = kwargs)
+        self.Thread.start()
+        return self
+
+    def wait(self, timeout = None):
+        self.Thread.join(timeout)
+        if self.Thread.isAlive():
+            raise TimeoutError()
+        else:
+            return self.Result
+
+    def run(self, *args, **kwargs):
+        self.Result = self.Callable(*args, **kwargs)
+        if self.Callback:
+            self.Callback(self.Result)
+
+class AsyncMethod(object):
+    def __init__(self, fnc, callback=None):
+        self.Callable = fnc
+        self.Callback = callback
+
+    def __call__(self, *args, **kwargs):
+        return AsyncCall(self.Callable, self.Callback)(*args, **kwargs)
+
+def Async(fnc = None, callback = None):
+    if fnc == None:
+        def AddAsyncCallback(fnc):
+            return AsyncMethod(fnc, callback)
+        return AddAsyncCallback
+    else:
+        return AsyncMethod(fnc, callback)
 
 
 class MyHandler(BaseHTTPRequestHandler):
@@ -134,7 +176,7 @@ class MyHandler(BaseHTTPRequestHandler):
 				self.send_header('Connection',	'close')
 				self.send_header('Content-Length', len(msg))
 				self.end_headers()
-				self.wfile.write(mgs.encode('utf-8'))
+				self.wfile.write(msg.encode('utf-8'))
                 
 				server.socket.close();
                 
@@ -147,8 +189,7 @@ class MyHandler(BaseHTTPRequestHandler):
 				self.send_header('Content-Length', len(msg))
 				self.end_headers()
 				self.wfile.write(msg.encode('utf-8'))
-                
-				server.socket.close();
+
             
             else:
             	self.send_error(400,'Bad Request');
@@ -158,6 +199,8 @@ class MyHandler(BaseHTTPRequestHandler):
 
 
 
+
+@Async
 def startServer():
 	global portals, server;
 	
@@ -177,8 +220,38 @@ def startServer():
 		server.serve_forever();
 		
 	except KeyboardInterrupt:
-		server.socket.close();
+		if server != None:
+			server.socket.close();
 
+def serverOnline():
+	
+	port = addon.getSetting('server_port');
+	
+	try:
+		url = urllib.urlopen('http://localhost:' + str(port) + '/online');
+		code = url.getcode();
+		
+		if code == 200:
+			return True;
+	
+	except Exception as e:
+		return False;
+
+	return False;
+
+
+def stopServer():
+	
+	port = addon.getSetting('server_port');
+	
+	try:
+		url = urllib.urlopen('http://localhost:' + str(port) + '/stop');
+		code = url.getcode();
+
+	except Exception as e:
+		return;
+
+	return;
 
 if __name__ == '__main__':
 	startServer();

@@ -29,7 +29,7 @@
    	 	<setting label="30010" type="text" id="serial_number_2" default="" visible="eq(-2,true) + eq(-3,true)"/>
    	 	<setting label="30011" type="text" id="device_id_2" default="" visible="eq(-3,true) + eq(-4,true)"/>
    	 	<setting label="30012" type="text" id="device_id2_2" default="" visible="eq(-4,true) + eq(-5,true)"/>
-   	 	<setting label="30013" type="text" id="signature_2" default="" visible="eq(-5,true) + q(-6,true)"/>
+   	 	<setting label="30013" type="text" id="signature_2" default="" visible="eq(-5,true) + eq(-6,true)"/>
     </category>
     
     <category label="33003">
@@ -56,5 +56,8 @@
     <category label="33004">
     	<setting label="30015" type="bool" id="server_enable" default="true"/>
     	<setting label="30017" type="number" id="server_port" default="8899" visible="eq(-1,true)"/>
+    	<setting type="sep"/>
+    	<setting label="30016" type="action" visible="eq(-3,true)" action="XBMC.RunPlugin(plugin://plugin.video.stalker/?mode=server&action=start)"/>
+    	<setting label="30018" type="action" visible="eq(-4,true)" action="XBMC.RunPlugin(plugin://plugin.video.stalker/?mode=server&action=stop)"/>
     </category>
 </settings>

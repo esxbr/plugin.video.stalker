@@ -45,3 +45,7 @@ Reverted the authentication to version 1.0.11.
 1.0.17
 Fixed some bugs.
 Added new server page to be compatible with SIMPLE IPTV (https://play.google.com/store/apps/details?id=com.burakkal.simpleiptv&hl=en)
+
+1.0.18
+Added start/stop button on config - M3U Server
+Fixed some small bugs
