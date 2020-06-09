@@ -1,5 +1,8 @@
 # plugin.video.stalker
 
+No longer supported
+Check this one: https://kodi.wiki/view/Add-on:Stalker_Client
+
 Kodi Stalker video add-on - all platforms
 
 Forum
